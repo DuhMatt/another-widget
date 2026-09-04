@@ -12,6 +12,7 @@ import com.tommasoberlose.anotherwidget.global.Preferences
 import com.tommasoberlose.anotherwidget.helpers.*
 import com.tommasoberlose.anotherwidget.models.Event
 import com.tommasoberlose.anotherwidget.ui.widgets.MainWidget
+import com.tommasoberlose.anotherwidget.utils.setExactIfAllowed
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -119,7 +120,7 @@ class UpdatesReceiver : BroadcastReceiver() {
                                     minutes = diff.minutes - (diff.minutes % 5)
                                 }
                             }
-                            setExact(
+                            setExactIfAllowed(
                                 AlarmManager.RTC,
                                 if (event.startDate - minutes * 1000 * 60 > (now.timeInMillis + 120 * 1000)) event.startDate - 60 * 1000 * minutes else now.timeInMillis + 120000,
                                 PendingIntent.getBroadcast(
@@ -133,7 +134,7 @@ class UpdatesReceiver : BroadcastReceiver() {
                                 )
                             )
                         } else {
-                            setExact(
+                            setExactIfAllowed(
                                 AlarmManager.RTC,
                                 event.startDate - diff.hours * 1000 * 60 * 60 + if (diff.minutes > 30) (-30) else (+30),
                                 PendingIntent.getBroadcast(
@@ -151,7 +152,7 @@ class UpdatesReceiver : BroadcastReceiver() {
                         // Update the widget one second after the event is finished
                         val fireTime =
                             if (event.endDate > now.timeInMillis + 120 * 1000) event.endDate else now.timeInMillis + 120000
-                        setExact(
+                        setExactIfAllowed(
                             AlarmManager.RTC,
                             fireTime,
                             PendingIntent.getBroadcast(
@@ -165,7 +166,7 @@ class UpdatesReceiver : BroadcastReceiver() {
                         )
                     }
                 } else {
-                    setExact(
+                    setExactIfAllowed(
                         AlarmManager.RTC,
                         if (event.startDate - limit > now.timeInMillis + 120 * 1000) event.startDate - limit else now.timeInMillis + 120000,
                         PendingIntent.getBroadcast(

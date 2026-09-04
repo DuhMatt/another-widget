@@ -9,6 +9,7 @@ import android.util.Log
 import com.tommasoberlose.anotherwidget.global.Actions
 import com.tommasoberlose.anotherwidget.receivers.ActivityDetectionReceiver
 import com.tommasoberlose.anotherwidget.receivers.UpdatesReceiver
+import com.tommasoberlose.anotherwidget.utils.setExactIfAllowed
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -45,7 +46,7 @@ object AlarmHelper {
                 action = Actions.ACTION_ALARM_UPDATE
             }
             cancel(PendingIntent.getBroadcast(context, ALARM_UPDATE_ID, intent, PendingIntent.FLAG_IMMUTABLE))
-            setExact(
+            setExactIfAllowed(
                 AlarmManager.RTC,
                 trigger,
                 PendingIntent.getBroadcast(

@@ -16,6 +16,7 @@ import com.tommasoberlose.anotherwidget.global.Preferences
 import com.tommasoberlose.anotherwidget.helpers.ActiveNotificationsHelper
 import com.tommasoberlose.anotherwidget.helpers.MediaPlayerHelper
 import com.tommasoberlose.anotherwidget.ui.widgets.MainWidget
+import com.tommasoberlose.anotherwidget.utils.setExactIfAllowed
 import java.lang.Exception
 import java.util.*
 
@@ -79,7 +80,7 @@ class NotificationListener : NotificationListenerService() {
             cancel(PendingIntent.getBroadcast(context, 28943, intent, PendingIntent.FLAG_IMMUTABLE))
             val timeoutPref = Constants.GlanceNotificationTimer.fromInt(Preferences.hideNotificationAfter)
             if (timeoutPref != Constants.GlanceNotificationTimer.WHEN_DISMISSED) {
-                setExact(
+                setExactIfAllowed(
                     AlarmManager.RTC,
                     Calendar.getInstance().timeInMillis + when (timeoutPref) {
                         Constants.GlanceNotificationTimer.HALF_MINUTE -> 30 * 1000

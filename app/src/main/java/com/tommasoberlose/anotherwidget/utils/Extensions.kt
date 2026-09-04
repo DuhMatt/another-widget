@@ -9,6 +9,7 @@ import android.app.Activity
 import android.app.WallpaperManager
 import android.content.*
 import android.net.Uri
+import android.os.Build
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.content.ContextCompat
 import android.content.res.Configuration
@@ -210,6 +211,18 @@ fun Float.convertSpToPixels(context: Context): Float {
 
 fun Context.checkGrantedPermission(permission: String): Boolean {
     return ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
+}
+
+fun android.app.AlarmManager.setExactIfAllowed(
+    type: Int,
+    triggerAtMillis: Long,
+    operation: android.app.PendingIntent
+) {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S || canScheduleExactAlarms()) {
+        setExact(type, triggerAtMillis, operation)
+    } else {
+        setAndAllowWhileIdle(type, triggerAtMillis, operation)
+    }
 }
 
 fun Context.getCurrentWallpaper(): Drawable? = try {

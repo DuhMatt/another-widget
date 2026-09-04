@@ -21,6 +21,7 @@ import com.google.android.gms.location.*
 import com.tommasoberlose.anotherwidget.global.Preferences
 import com.tommasoberlose.anotherwidget.ui.widgets.MainWidget
 import com.tommasoberlose.anotherwidget.utils.checkGrantedPermission
+import com.tommasoberlose.anotherwidget.utils.setExactIfAllowed
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -165,7 +166,7 @@ class ActivityDetectionReceiver : BroadcastReceiver() {
         private fun setTimeout(context: Context) {
             with(context.getSystemService(Context.ALARM_SERVICE) as AlarmManager) {
                 cancel(PendingIntent.getBroadcast(context, 5, Intent(context, ActivityDetectionReceiver::class.java), PendingIntent.FLAG_IMMUTABLE))
-                setExact(
+                setExactIfAllowed(
                     AlarmManager.RTC,
                     Calendar.getInstance().timeInMillis + 5 * 60 * 1000,
                     PendingIntent.getBroadcast(
