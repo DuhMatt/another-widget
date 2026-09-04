@@ -30,4 +30,13 @@
         app:backgroundTint="@color/colorAccent"
         app:icon="@drawable/round_add_24"
         app:iconTint="@android:color/white"/>
+
+    <View
+        android:id="@+id/status_bar_scrim"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_alignParentTop="true"
+        android:background="@color/colorPrimary"
+        android:clickable="false"
+        android:focusable="false" />
 </RelativeLayout>
