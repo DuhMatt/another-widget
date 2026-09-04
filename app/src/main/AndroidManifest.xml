@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="com.tommasoberlose.anotherwidget">
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.READ_CALENDAR" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="com.android.vending.BILLING" />
@@ -13,6 +13,7 @@
     <uses-permission android:name="android.gms.permission.ACTIVITY_RECOGNITION"/>
     <uses-permission android:name="com.google.android.gms.permission.ACTIVITY_RECOGNITION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
     <application
         android:allowBackup="true"
@@ -24,7 +25,7 @@
         android:usesCleartextTraffic="true"
         android:theme="@style/AppTheme"
         tools:ignore="LockedOrientationActivity">
-        <activity android:name=".ui.activities.MainActivity" android:launchMode="singleInstance" android:theme="@style/AppTheme.Main" android:screenOrientation="portrait">
+        <activity android:name=".ui.activities.MainActivity" android:exported="true" android:launchMode="singleInstance" android:theme="@style/AppTheme.Main" android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -43,7 +44,7 @@
         <activity android:name=".ui.activities.tabs.MediaInfoFormatActivity" android:launchMode="singleInstance" android:screenOrientation="portrait" />
         <activity android:name=".ui.activities.tabs.TimeZoneSelectorActivity" android:launchMode="singleInstance" android:screenOrientation="portrait" />
 
-        <receiver android:name=".ui.widgets.MainWidget">
+        <receiver android:name=".ui.widgets.MainWidget" android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -117,11 +118,12 @@
             </intent-filter>
         </receiver>
 
-        <service android:name=".services.EventListenerJob" android:permission="android.permission.BIND_JOB_SERVICE" />
+        <service android:name=".services.EventListenerJob" android:exported="false" android:permission="android.permission.BIND_JOB_SERVICE" />
 
-        <service android:name=".services.BatteryListenerJob" android:permission="android.permission.BIND_JOB_SERVICE" />
+        <service android:name=".services.BatteryListenerJob" android:exported="false" android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <service android:name=".receivers.NotificationListener"
+            android:exported="true"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
             <intent-filter>
                 <action android:name="android.service.notification.NotificationListenerService" />
@@ -155,11 +157,6 @@
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
-        <service
-            android:name=".services.LocationService"
-            android:enabled="true"
-            android:exported="false"
-            android:foregroundServiceType="location" />
     </application>
 
     <queries>

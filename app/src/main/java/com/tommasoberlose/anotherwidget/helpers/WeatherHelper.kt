@@ -1,15 +1,12 @@
 package com.tommasoberlose.anotherwidget.helpers
 
-import android.Manifest
 import android.content.Context
 import com.chibatching.kotpref.Kotpref
 import com.tommasoberlose.anotherwidget.R
 import com.tommasoberlose.anotherwidget.global.Constants
 import com.tommasoberlose.anotherwidget.global.Preferences
-import com.tommasoberlose.anotherwidget.network.WeatherNetworkApi
-import com.tommasoberlose.anotherwidget.services.LocationService
+import com.tommasoberlose.anotherwidget.services.WeatherWorker
 import com.tommasoberlose.anotherwidget.ui.widgets.MainWidget
-import com.tommasoberlose.anotherwidget.utils.checkGrantedPermission
 import com.tommasoberlose.anotherwidget.utils.isDarkTheme
 
 
@@ -19,13 +16,12 @@ import com.tommasoberlose.anotherwidget.utils.isDarkTheme
 
 object WeatherHelper {
 
-    suspend fun updateWeather(context: Context) {
+    fun updateWeather(context: Context, force: Boolean = false) {
         Kotpref.init(context)
-        val networkApi = WeatherNetworkApi(context)
-        if (Preferences.customLocationAdd != "") {
-            networkApi.updateWeather()
-        } else if (context.checkGrantedPermission(Manifest.permission.ACCESS_FINE_LOCATION)) {
-            LocationService.requestNewLocation(context)
+        if (Preferences.showWeather || force) {
+            WeatherWorker.enqueue(context, replace = force)
+        } else {
+            removeWeather(context)
         }
     }
 

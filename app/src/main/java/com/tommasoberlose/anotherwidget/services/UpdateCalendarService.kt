@@ -206,7 +206,7 @@ class UpdateCalendarService : Service() {
                 .setColor(ContextCompat.getColor(this@UpdateCalendarService, R.color.colorAccent))
 
             // Main intent that open the activity
-            builder.setContentIntent(PendingIntent.getActivity(this@UpdateCalendarService, 0, Intent(this@UpdateCalendarService, MainActivity::class.java), PendingIntent.FLAG_UPDATE_CURRENT))
+            builder.setContentIntent(PendingIntent.getActivity(this@UpdateCalendarService, 0, Intent(this@UpdateCalendarService, MainActivity::class.java), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
 
             return builder.build()
         }

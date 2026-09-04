@@ -76,7 +76,7 @@ class NotificationListener : NotificationListenerService() {
             val intent = Intent(context, UpdatesReceiver::class.java).apply {
                 action = Actions.ACTION_CLEAR_NOTIFICATION
             }
-            cancel(PendingIntent.getBroadcast(context, 28943, intent, 0))
+            cancel(PendingIntent.getBroadcast(context, 28943, intent, PendingIntent.FLAG_IMMUTABLE))
             val timeoutPref = Constants.GlanceNotificationTimer.fromInt(Preferences.hideNotificationAfter)
             if (timeoutPref != Constants.GlanceNotificationTimer.WHEN_DISMISSED) {
                 setExact(
@@ -93,7 +93,7 @@ class NotificationListener : NotificationListenerService() {
                         context,
                         5,
                         intent,
-                        0
+                        PendingIntent.FLAG_IMMUTABLE
                     )
                 )
             }

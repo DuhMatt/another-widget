@@ -1,25 +1,18 @@
 package com.tommasoberlose.anotherwidget.ui.fragments.tabs
 
-import android.Manifest
-import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.chibatching.kotpref.bulk
 import com.google.android.material.transition.MaterialSharedAxis
-import com.karumi.dexter.Dexter
-import com.karumi.dexter.MultiplePermissionsReport
-import com.karumi.dexter.PermissionToken
-import com.karumi.dexter.listener.PermissionRequest
-import com.karumi.dexter.listener.multi.MultiplePermissionsListener
 import com.tommasoberlose.anotherwidget.R
 import com.tommasoberlose.anotherwidget.components.BottomSheetMenu
 import com.tommasoberlose.anotherwidget.components.IconPackSelector
@@ -27,7 +20,6 @@ import com.tommasoberlose.anotherwidget.components.MaterialBottomSheetDialog
 import com.tommasoberlose.anotherwidget.databinding.FragmentTabWeatherBinding
 import com.tommasoberlose.anotherwidget.global.Constants
 import com.tommasoberlose.anotherwidget.global.Preferences
-import com.tommasoberlose.anotherwidget.global.RequestCode
 import com.tommasoberlose.anotherwidget.helpers.SettingsStringHelper
 import com.tommasoberlose.anotherwidget.helpers.WeatherHelper
 import com.tommasoberlose.anotherwidget.receivers.WeatherReceiver
@@ -37,7 +29,6 @@ import com.tommasoberlose.anotherwidget.ui.activities.MainActivity
 import com.tommasoberlose.anotherwidget.ui.activities.tabs.WeatherProviderActivity
 import com.tommasoberlose.anotherwidget.ui.viewmodels.MainViewModel
 import com.tommasoberlose.anotherwidget.ui.widgets.MainWidget
-import com.tommasoberlose.anotherwidget.utils.checkGrantedPermission
 import com.tommasoberlose.anotherwidget.utils.collapse
 import com.tommasoberlose.anotherwidget.utils.expand
 import kotlinx.coroutines.delay
@@ -51,6 +42,25 @@ class WeatherFragment : Fragment() {
 
     private lateinit var viewModel: MainViewModel
     private lateinit var binding: FragmentTabWeatherBinding
+
+    private val customLocationLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK) {
+            WeatherReceiver.setUpdates(requireContext())
+            WeatherHelper.updateWeather(requireContext())
+            checkLocationPermission()
+        }
+    }
+
+    private val weatherProviderLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK) {
+            WeatherHelper.updateWeather(requireContext())
+            checkLocationPermission()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -135,13 +145,17 @@ class WeatherFragment : Fragment() {
     }
 
     private fun checkLocationPermission() {
-        if (requireActivity().checkGrantedPermission(Manifest.permission.ACCESS_FINE_LOCATION)) {
+        val hasSavedLocation = Preferences.customLocationLat.isNotBlank() &&
+            Preferences.customLocationLon.isNotBlank()
+        if (hasSavedLocation || Preferences.customLocationAdd.isNotBlank()) {
             binding.locationPermissionAlert.isVisible = false
             WeatherReceiver.setUpdates(requireContext())
-        } else if (Preferences.showWeather && Preferences.customLocationAdd == "") {
+        } else if (Preferences.showWeather) {
             binding.locationPermissionAlert.isVisible = true
             binding.locationPermissionAlert.setOnClickListener {
-                requirePermission()
+                customLocationLauncher.launch(
+                    Intent(requireContext(), CustomLocationActivity::class.java)
+                )
             }
         } else {
             binding.locationPermissionAlert.isVisible = false
@@ -158,17 +172,13 @@ class WeatherFragment : Fragment() {
 
     private fun setupListener() {
         binding.actionWeatherProvider.setOnClickListener {
-            startActivityForResult(
+            weatherProviderLauncher.launch(
                 Intent(requireContext(), WeatherProviderActivity::class.java),
-                RequestCode.WEATHER_PROVIDER_REQUEST_CODE.code
             )
         }
 
         binding.actionCustomLocation.setOnClickListener {
-            startActivityForResult(
-                Intent(requireContext(), CustomLocationActivity::class.java),
-                Constants.RESULT_CODE_CUSTOM_LOCATION
-            )
+            customLocationLauncher.launch(Intent(requireContext(), CustomLocationActivity::class.java))
         }
 
         binding.actionChangeUnit.setOnClickListener {
@@ -200,45 +210,6 @@ class WeatherFragment : Fragment() {
         binding.actionWeatherIconPack.setOnClickListener {
             IconPackSelector(requireContext(), header = getString(R.string.settings_weather_icon_pack_title)).show()
         }
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (resultCode == Activity.RESULT_OK) {
-            when (requestCode) {
-                Constants.RESULT_CODE_CUSTOM_LOCATION -> {
-                    WeatherReceiver.setUpdates(requireContext())
-                    checkLocationPermission()
-                }
-                RequestCode.WEATHER_PROVIDER_REQUEST_CODE.code -> {
-                    checkLocationPermission()
-                }
-            }
-        }
-        super.onActivityResult(requestCode, resultCode, data)
-    }
-
-    private fun requirePermission() {
-        Dexter.withContext(requireContext())
-            .withPermissions(
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ).withListener(object: MultiplePermissionsListener {
-                override fun onPermissionsChecked(report: MultiplePermissionsReport?) {
-                    report?.let {
-                        if (report.areAllPermissionsGranted()){
-                            checkLocationPermission()
-                        }
-                    }
-                }
-                override fun onPermissionRationaleShouldBeShown(
-                    permissions: MutableList<PermissionRequest>?,
-                    token: PermissionToken?
-                ) {
-                    // Remember to invoke this method when the custom rationale is closed
-                    // or just by default if you don't want to use any custom rationale.
-                    token?.continuePermissionRequest()
-                }
-            })
-            .check()
     }
 
     private fun maintainScrollPosition(callback: () -> Unit) {

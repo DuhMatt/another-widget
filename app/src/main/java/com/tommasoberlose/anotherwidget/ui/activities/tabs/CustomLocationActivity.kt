@@ -2,35 +2,49 @@ package com.tommasoberlose.anotherwidget.ui.activities.tabs
 
 import android.Manifest
 import android.app.Activity
+import android.content.pm.PackageManager
 import android.location.Address
 import android.location.Geocoder
 import android.os.Bundle
+import android.os.Build
 import android.util.Log
+import android.widget.Toast
 import com.tommasoberlose.anotherwidget.R
 import android.view.View
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.chibatching.kotpref.bulk
-import com.karumi.dexter.Dexter
-import com.karumi.dexter.MultiplePermissionsReport
-import com.karumi.dexter.PermissionToken
-import com.karumi.dexter.listener.PermissionRequest
-import com.karumi.dexter.listener.multi.MultiplePermissionsListener
 import com.tommasoberlose.anotherwidget.databinding.ActivityCustomLocationBinding
 import com.tommasoberlose.anotherwidget.global.Preferences
+import com.tommasoberlose.anotherwidget.location.LocationRepository
 import com.tommasoberlose.anotherwidget.ui.viewmodels.tabs.CustomLocationViewModel
 import kotlinx.coroutines.*
 import net.idik.lib.slimadapter.SlimAdapter
+import kotlin.coroutines.resume
 
 class CustomLocationActivity : AppCompatActivity() {
 
     private lateinit var adapter: SlimAdapter
     private lateinit var viewModel: CustomLocationViewModel
     private lateinit var binding: ActivityCustomLocationBinding
+
+    private val locationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        if (permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true ||
+            permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true
+        ) {
+            requestCurrentLocation()
+        } else {
+            showLocationError()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -98,12 +112,7 @@ class CustomLocationActivity : AppCompatActivity() {
                 val list = if (location == null || location == "") {
                     viewModel.addresses.value!!
                 } else {
-                    val coder = Geocoder(this@CustomLocationActivity)
-                    try {
-                        coder.getFromLocationName(location, 10) as ArrayList<Address>
-                    } catch (ignored: Exception) {
-                        emptyList<Address>()
-                    }
+                    geocode(location)
                 }
                 withContext(Dispatchers.Main) {
                     viewModel.addresses.value = list
@@ -115,34 +124,82 @@ class CustomLocationActivity : AppCompatActivity() {
         })
     }
 
-    private fun requirePermission() {
-        Dexter.withContext(this)
-            .withPermissions(
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ).withListener(object: MultiplePermissionsListener {
-                override fun onPermissionsChecked(report: MultiplePermissionsReport?) {
-                    report?.let {
-                        if (report.areAllPermissionsGranted()){
-                            Preferences.bulk {
-                                remove(Preferences::customLocationLat)
-                                remove(Preferences::customLocationLon)
-                                remove(Preferences::customLocationAdd)
-                            }
-                            setResult(Activity.RESULT_OK)
-                            finish()
-                        }
+    private suspend fun geocode(query: String): List<Address> {
+        val geocoder = Geocoder(this@CustomLocationActivity)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            return suspendCancellableCoroutine { continuation ->
+                geocoder.getFromLocationName(query, 10, object : Geocoder.GeocodeListener {
+                    override fun onGeocode(addresses: List<Address>) {
+                        if (continuation.isActive) continuation.resume(addresses)
                     }
+
+                    override fun onError(errorMessage: String?) {
+                        if (continuation.isActive) continuation.resume(emptyList())
+                    }
+                })
+            }
+        }
+
+        @Suppress("DEPRECATION")
+        return try {
+            withContext(Dispatchers.IO) {
+                geocoder.getFromLocationName(query, 10).orEmpty()
+            }
+        } catch (ignored: Exception) {
+            emptyList()
+        }
+    }
+
+    private fun requirePermission() {
+        if (hasLocationPermission()) {
+            requestCurrentLocation()
+        } else {
+            locationPermissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                )
+            )
+        }
+    }
+
+    private fun hasLocationPermission(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun requestCurrentLocation() {
+        binding.loader.visibility = View.VISIBLE
+        lifecycleScope.launch {
+            try {
+                val location = LocationRepository(this@CustomLocationActivity).getCurrentLocation()
+                if (location == null) {
+                    showLocationError()
+                } else {
+                    Preferences.bulk {
+                        customLocationLat = location.latitude.toString()
+                        customLocationLon = location.longitude.toString()
+                        customLocationAdd = ""
+                    }
+                    setResult(Activity.RESULT_OK)
+                    finish()
                 }
-                override fun onPermissionRationaleShouldBeShown(
-                    permissions: MutableList<PermissionRequest>?,
-                    token: PermissionToken?
-                ) {
-                    // Remember to invoke this method when the custom rationale is closed
-                    // or just by default if you don't want to use any custom rationale.
-                    token?.continuePermissionRequest()
-                }
-            })
-            .check()
+            } catch (exception: Exception) {
+                Log.w("CustomLocationActivity", "Unable to obtain current location", exception)
+                showLocationError()
+            } finally {
+                binding.loader.visibility = View.INVISIBLE
+            }
+        }
+    }
+
+    private fun showLocationError() {
+        Toast.makeText(this, R.string.weather_location_unavailable, Toast.LENGTH_LONG).show()
     }
 
     private fun setupListener() {

@@ -46,7 +46,7 @@ class MusicPlayersFilterActivity : AppCompatActivity() {
                             .with(this)
                             .load(item.loadIcon(viewModel.pm))
                             .centerCrop()
-                            .into(it)
+                            .into(it as ImageView)
                     }
                     .visible(R.id.checkBox)
                     .clicked(R.id.item) {

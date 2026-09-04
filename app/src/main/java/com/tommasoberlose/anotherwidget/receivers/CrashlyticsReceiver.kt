@@ -4,16 +4,16 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
-import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tommasoberlose.anotherwidget.global.Actions
+import com.tommasoberlose.anotherwidget.helpers.CrashlyticsHelper
 import java.lang.Exception
 
 class CrashlyticsReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action == Actions.ACTION_REPORT_CRASH) {
             val exception: Exception = intent.getSerializableExtra(EXCEPTION) as Exception
-            FirebaseCrashlytics.getInstance().recordException(exception)
-            FirebaseCrashlytics.getInstance().sendUnsentReports()
+            CrashlyticsHelper.recordException(context, exception)
+            CrashlyticsHelper.sendUnsentReports(context)
         }
     }
 

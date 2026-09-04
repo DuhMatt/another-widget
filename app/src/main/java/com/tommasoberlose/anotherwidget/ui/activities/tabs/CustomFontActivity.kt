@@ -72,7 +72,7 @@ class CustomFontActivity : AppCompatActivity() {
                             "800" -> Typeface.createFromAsset(this.assets, "fonts/google_sans_black.ttf")
                             else -> Typeface.createFromAsset(this.assets, "fonts/google_sans_regular.ttf")
                         }
-                        it.typeface = googleSans
+                        (it as TextView).typeface = googleSans
                     }
 
                 injector.clicked(R.id.text) {
@@ -99,7 +99,7 @@ class CustomFontActivity : AppCompatActivity() {
 
                         val callback = object : FontsContractCompat.FontRequestCallback() {
                             override fun onTypefaceRetrieved(typeface: Typeface) {
-                                it.typeface = typeface
+                                (it as TextView).typeface = typeface
                                 it.isVisible = true
 
                                 it.measure(

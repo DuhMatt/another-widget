@@ -31,7 +31,7 @@ class WeatherNetworkApi(val context: Context) {
         Preferences.weatherProviderError = "-"
         Preferences.weatherProviderLocationError = ""
 
-        if (Preferences.showWeather && Preferences.customLocationLat != "" && Preferences.customLocationLon != "") {
+        if (Preferences.showWeather && hasValidLocation()) {
             when (Constants.WeatherProvider.fromInt(Preferences.weatherProvider)) {
                 Constants.WeatherProvider.OPEN_WEATHER -> useOpenWeatherMap(context)
                 Constants.WeatherProvider.WEATHER_GOV -> useWeatherGov(context)
@@ -40,14 +40,27 @@ class WeatherNetworkApi(val context: Context) {
                 Constants.WeatherProvider.HERE -> useHereProvider(context)
                 Constants.WeatherProvider.ACCUWEATHER -> useAccuweatherProvider(context)
                 Constants.WeatherProvider.YR -> useYrProvider(context)
+                else -> {
+                    Preferences.weatherProviderError = context.getString(R.string.weather_provider_error_generic)
+                    WeatherHelper.removeWeather(context)
+                    EventBus.getDefault().post(MainFragment.UpdateUiMessageEvent())
+                }
             }
         } else {
+            if (Preferences.showWeather) {
+                Preferences.weatherProviderLocationError = context.getString(R.string.weather_provider_error_missing_location)
+            }
             WeatherHelper.removeWeather(
                 context
             )
 
             EventBus.getDefault().post(MainFragment.UpdateUiMessageEvent())
         }
+    }
+
+    private fun hasValidLocation(): Boolean {
+        return Preferences.customLocationLat.toDoubleOrNull() != null &&
+            Preferences.customLocationLon.toDoubleOrNull() != null
     }
 
     private fun useOpenWeatherMap(context: Context) {

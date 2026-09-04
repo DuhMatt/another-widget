@@ -79,15 +79,15 @@ class WeatherProviderActivity : AppCompatActivity() {
                     .checked(R.id.radioButton, provider.rawValue == Preferences.weatherProvider)
                     .with<TextView>(R.id.text2) {
                         if (WeatherHelper.isKeyRequired(provider)) {
-                            it.text = getString(R.string.api_key_required_message)
+                            (it as TextView).text = getString(R.string.api_key_required_message)
                         }
 
                         if (provider == Constants.WeatherProvider.WEATHER_GOV) {
-                            it.text = getString(R.string.us_only_message)
+                            (it as TextView).text = getString(R.string.us_only_message)
                         }
 
                         if (provider == Constants.WeatherProvider.YR) {
-                            it.text = getString(R.string.celsius_only_message)
+                            (it as TextView).text = getString(R.string.celsius_only_message)
                         }
                     }
                     .clicked(R.id.action_configure) {
@@ -101,10 +101,10 @@ class WeatherProviderActivity : AppCompatActivity() {
                     .visibility(R.id.action_configure, if (/*WeatherHelper.isKeyRequired(provider) && */provider.rawValue == Preferences.weatherProvider) View.VISIBLE else View.GONE)
                     .with<TextView>(R.id.provider_error) {
                         if (Preferences.weatherProviderError != "" && Preferences.weatherProviderError != "-") {
-                            it.text = Preferences.weatherProviderError
+                            (it as TextView).text = Preferences.weatherProviderError
                             it.isVisible = provider.rawValue == Preferences.weatherProvider
                         } else if (Preferences.weatherProviderLocationError != "") {
-                            it.text = Preferences.weatherProviderLocationError
+                            (it as TextView).text = Preferences.weatherProviderLocationError
                             it.isVisible = provider.rawValue == Preferences.weatherProvider
                         } else {
                             it.isVisible = false

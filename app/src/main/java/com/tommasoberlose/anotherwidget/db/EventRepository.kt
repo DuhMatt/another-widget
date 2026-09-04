@@ -1,34 +1,28 @@
 package com.tommasoberlose.anotherwidget.db
 
 import android.content.Context
-import android.provider.CalendarContract
-import android.util.Log
 import com.chibatching.kotpref.bulk
 import com.tommasoberlose.anotherwidget.global.Preferences
 import com.tommasoberlose.anotherwidget.helpers.CalendarHelper.applyFilters
+import com.tommasoberlose.anotherwidget.helpers.CalendarHelper.sortEvents
 import com.tommasoberlose.anotherwidget.models.Event
 import com.tommasoberlose.anotherwidget.receivers.UpdatesReceiver
 import com.tommasoberlose.anotherwidget.ui.widgets.MainWidget
-import io.realm.Realm
-import io.realm.RealmResults
-import java.util.*
-import kotlin.Comparator
-import kotlin.collections.ArrayList
+import java.util.Calendar
 
-class EventRepository(val context: Context) {
-    private val realm by lazy { Realm.getDefaultInstance() }
+class EventRepository(private val context: Context) {
+    private val database = AppDatabase.getInstance(context)
+    private val dao = database.eventDao()
 
     fun saveEvents(eventList: List<Event>) {
-        realm.executeTransaction { realm ->
-            realm.where(Event::class.java).findAll().deleteAllFromRealm()
-            realm.copyToRealm(eventList)
+        database.runInTransaction {
+            dao.deleteAll()
+            if (eventList.isNotEmpty()) dao.insert(eventList)
         }
     }
 
     fun clearEvents() {
-        realm.executeTransaction { realm ->
-            realm.where(Event::class.java).findAll().deleteAllFromRealm()
-        }
+        dao.deleteAll()
     }
 
     fun resetNextEventData() {
@@ -50,58 +44,29 @@ class EventRepository(val context: Context) {
     fun getNextEvent(): Event? {
         val nextEvent = getEventByEventId(Preferences.nextEventId)
         val now = Calendar.getInstance().timeInMillis
-        val limit = Calendar.getInstance().apply {
-            timeInMillis = now
-            when (Preferences.showUntil) {
-                0 -> add(Calendar.HOUR, 3)
-                1 -> add(Calendar.HOUR, 6)
-                2 -> add(Calendar.HOUR, 12)
-                3 -> add(Calendar.DAY_OF_MONTH, 1)
-                4 -> add(Calendar.DAY_OF_MONTH, 3)
-                5 -> add(Calendar.DAY_OF_MONTH, 7)
-                6 -> add(Calendar.MINUTE, 30)
-                7 -> add(Calendar.HOUR, 1)
-                else -> add(Calendar.HOUR, 6)
-            }
-        }
-        val event = if (nextEvent != null && nextEvent.endDate > now && nextEvent.startDate < limit.timeInMillis) {
+        val limit = getEventWindow(now)
+        return if (nextEvent != null && nextEvent.endDate > now && nextEvent.startDate < limit) {
             nextEvent
         } else {
             val events = getEvents()
             if (events.isNotEmpty()) {
                 val newNextEvent = events.first()
-                Preferences.nextEventId = newNextEvent.eventID
+                saveNextEventData(newNextEvent)
                 newNextEvent
             } else {
                 resetNextEventData()
                 null
             }
         }
-        return try {
-            realm.copyFromRealm(event!!)
-        } catch (ex: Exception) {
-            event
-        }
     }
 
-    fun getEventByEventId(id: Long): Event? {
-        val event = realm.where(Event::class.java).equalTo("eventID", id).findFirst()
-        return try {
-            realm.copyFromRealm(event!!)
-        } catch (ex: Exception) {
-            event
-        }
-    }
+    fun getEventByEventId(id: Long): Event? = dao.findByEventId(id)
 
     fun goToNextEvent() {
         val eventList = getEvents()
         if (eventList.isNotEmpty()) {
             val index = eventList.indexOfFirst { it.eventID == Preferences.nextEventId }
-            if (index > -1 && index < eventList.size - 1) {
-                Preferences.nextEventId = eventList[index + 1].eventID
-            } else {
-                Preferences.nextEventId = eventList.first().eventID
-            }
+            saveNextEventData(if (index in 0 until eventList.lastIndex) eventList[index + 1] else eventList.first())
         } else {
             resetNextEventData()
         }
@@ -113,11 +78,7 @@ class EventRepository(val context: Context) {
         val eventList = getEvents()
         if (eventList.isNotEmpty()) {
             val index = eventList.indexOfFirst { it.eventID == Preferences.nextEventId }
-            if (index > 0) {
-                Preferences.nextEventId = eventList[index - 1].eventID
-            } else {
-                Preferences.nextEventId = eventList.last().eventID
-            }
+            saveNextEventData(if (index > 0) eventList[index - 1] else eventList.last())
         } else {
             resetNextEventData()
         }
@@ -125,19 +86,19 @@ class EventRepository(val context: Context) {
         MainWidget.updateWidget(context)
     }
 
-    fun getFutureEvents(): List<Event> {
-        val now = Calendar.getInstance().timeInMillis
-        realm.refresh()
-        return realm
-            .where(Event::class.java)
-            .greaterThan("endDate", now)
-            .findAll()
-            .applyFilters()
-    }
+    fun getFutureEvents(): List<Event> = dao.find(Calendar.getInstance().timeInMillis).applyFilters().sortEvents()
 
     private fun getEvents(): List<Event> {
         val now = Calendar.getInstance().timeInMillis
-        val limit = Calendar.getInstance().apply {
+        return dao.find(now, getEventWindow(now)).applyFilters().sortEvents()
+    }
+
+    fun getEventsCount(): Int = getEvents().size
+
+    fun close() = Unit
+
+    private fun getEventWindow(now: Long): Long {
+        return Calendar.getInstance().apply {
             timeInMillis = now
             when (Preferences.showUntil) {
                 0 -> add(Calendar.HOUR, 3)
@@ -150,19 +111,6 @@ class EventRepository(val context: Context) {
                 7 -> add(Calendar.HOUR, 1)
                 else -> add(Calendar.HOUR, 6)
             }
-        }
-        realm.refresh()
-        return realm
-            .where(Event::class.java)
-            .greaterThan("endDate", now)
-            .lessThanOrEqualTo("startDate", limit.timeInMillis)
-            .findAll()
-            .applyFilters()
-    }
-
-    fun getEventsCount(): Int = getEvents().size
-
-    fun close() {
-        realm.close()
+        }.timeInMillis
     }
 }

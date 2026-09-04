@@ -33,6 +33,7 @@ class TimeZonesApi(val context: Context) {
                     ex.printStackTrace()
                 }
             }
+            else -> Unit
         }
 
         return id

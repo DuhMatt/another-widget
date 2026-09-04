@@ -103,7 +103,7 @@ class GlanceTabFragment : Fragment() {
                 injector
                     .text(R.id.title, item.title)
                     .with<ImageView>(R.id.icon) {
-                        it.setImageDrawable(ContextCompat.getDrawable(requireContext(), item.icon))
+                        (it as ImageView).setImageDrawable(ContextCompat.getDrawable(requireContext(), item.icon))
                     }
                     .clicked(R.id.item) {
                         if (provider == Constants.GlanceProviderId.CUSTOM_INFO) {

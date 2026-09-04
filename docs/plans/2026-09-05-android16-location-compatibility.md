@@ -6,7 +6,7 @@
 
 **Architecture:** Obtain a fresh location while the settings activity is visible, persist latitude and longitude, and let background weather refreshes use those saved coordinates. Replace the weather alarm/foreground-service path with WorkManager and keep background location optional rather than making it a prerequisite for weather.
 
-**Tech Stack:** Kotlin, Android API 36, Android Gradle Plugin 8.10+, Gradle 8.11+, AndroidX Activity Result APIs, FusedLocationProviderClient `getCurrentLocation`, WorkManager, Room.
+**Tech Stack:** Kotlin 2.1.20, Android API 36, Android Gradle Plugin 8.10+, Gradle 8.11+, AndroidX Activity Result APIs, FusedLocationProviderClient `getCurrentLocation`, WorkManager, Room.
 
 ---
 
@@ -88,4 +88,3 @@
 2. Inspect the merged manifest for API 36 permissions and exported components.
 3. Build a debug APK and verify its package name, target SDK, and location permissions with APK tooling.
 4. Install only after the user confirms the connected phone is ready; then verify permission flow, current location, weather refresh, and behavior after force-stopping the app.
-

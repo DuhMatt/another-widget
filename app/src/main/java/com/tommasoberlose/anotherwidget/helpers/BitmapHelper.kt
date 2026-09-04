@@ -8,7 +8,6 @@ import android.util.Log
 import android.view.View
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
-import com.google.firebase.crashlytics.FirebaseCrashlytics
 
 
 object BitmapHelper {
@@ -40,12 +39,12 @@ object BitmapHelper {
         }
 
         if (draw) {
-            FirebaseCrashlytics.getInstance().setCustomKey("WIDTH SPEC", measuredWidth)
-            FirebaseCrashlytics.getInstance().setCustomKey("HEIGHT SPEC", measuredHeight)
-            FirebaseCrashlytics.getInstance().setCustomKey("VIEW measuredWidth", view.measuredWidth)
-            FirebaseCrashlytics.getInstance().setCustomKey("VIEW measuredHeight", view.measuredHeight)
-            FirebaseCrashlytics.getInstance().setCustomKey("WIDGET final width", measuredWidth)
-            FirebaseCrashlytics.getInstance().setCustomKey("WIDGET final height", view.measuredHeight)
+            CrashlyticsHelper.setCustomKey(view.context, "WIDTH SPEC", measuredWidth)
+            CrashlyticsHelper.setCustomKey(view.context, "HEIGHT SPEC", measuredHeight)
+            CrashlyticsHelper.setCustomKey(view.context, "VIEW measuredWidth", view.measuredWidth)
+            CrashlyticsHelper.setCustomKey(view.context, "VIEW measuredHeight", view.measuredHeight)
+            CrashlyticsHelper.setCustomKey(view.context, "WIDGET final width", measuredWidth)
+            CrashlyticsHelper.setCustomKey(view.context, "WIDGET final height", view.measuredHeight)
         }
 
         return try {
@@ -64,7 +63,7 @@ object BitmapHelper {
             }
             btm
         } catch (ex: Exception) {
-            FirebaseCrashlytics.getInstance().recordException(ex)
+            CrashlyticsHelper.recordException(view.context, ex)
             Bitmap.createBitmap(5, 5, Bitmap.Config.ALPHA_8)
         }
     }

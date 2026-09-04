@@ -111,12 +111,12 @@ class BottomSheetColorPicker(
                 .register<Int>(R.layout.color_picker_menu_item) { item, injector ->
                     injector
                         .with<MaterialCardView>(R.id.color) {
-                            it.setCardBackgroundColor(ColorStateList.valueOf(item))
-                            it.strokeWidth = if ((colors.indexOf(item) == 0 && !context.isDarkTheme()) || (colors.indexOf(item) == 10 && context.isDarkTheme())) 2 else 0
+                            (it as MaterialCardView).setCardBackgroundColor(ColorStateList.valueOf(item))
+                            (it as MaterialCardView).strokeWidth = if ((colors.indexOf(item) == 0 && !context.isDarkTheme()) || (colors.indexOf(item) == 10 && context.isDarkTheme())) 2 else 0
                         }
                         .with<AppCompatImageView>(R.id.check) {
                             if (getSelected?.invoke() == item) {
-                                it.setColorFilter(
+                                (it as AppCompatImageView).setColorFilter(
                                     ContextCompat.getColor(
                                         context,
                                         if (item.isColorDark()) android.R.color.white else android.R.color.black

@@ -86,7 +86,7 @@ class ActivityDetectionReceiver : BroadcastReceiver() {
                             context,
                             2,
                             Intent(context, ActivityDetectionReceiver::class.java),
-                            0
+                            PendingIntent.FLAG_IMMUTABLE
                         )
                     )
 
@@ -105,7 +105,7 @@ class ActivityDetectionReceiver : BroadcastReceiver() {
                         context,
                         2,
                         Intent(context, ActivityDetectionReceiver::class.java),
-                        0
+                        PendingIntent.FLAG_IMMUTABLE
                     )
                 )
 
@@ -115,7 +115,7 @@ class ActivityDetectionReceiver : BroadcastReceiver() {
                         context,
                         2,
                         Intent(context, ActivityDetectionReceiver::class.java),
-                        0
+                        PendingIntent.FLAG_IMMUTABLE
                     ).cancel()
                 }
             }
@@ -164,7 +164,7 @@ class ActivityDetectionReceiver : BroadcastReceiver() {
 
         private fun setTimeout(context: Context) {
             with(context.getSystemService(Context.ALARM_SERVICE) as AlarmManager) {
-                cancel(PendingIntent.getBroadcast(context, 5, Intent(context, ActivityDetectionReceiver::class.java), 0))
+                cancel(PendingIntent.getBroadcast(context, 5, Intent(context, ActivityDetectionReceiver::class.java), PendingIntent.FLAG_IMMUTABLE))
                 setExact(
                     AlarmManager.RTC,
                     Calendar.getInstance().timeInMillis + 5 * 60 * 1000,
@@ -172,7 +172,7 @@ class ActivityDetectionReceiver : BroadcastReceiver() {
                         context,
                         5,
                         Intent(context, ActivityDetectionReceiver::class.java),
-                        0
+                        PendingIntent.FLAG_IMMUTABLE
                     )
                 )
             }

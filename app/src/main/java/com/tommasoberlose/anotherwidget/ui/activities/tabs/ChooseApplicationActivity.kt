@@ -57,7 +57,7 @@ class ChooseApplicationActivity : AppCompatActivity() {
                             .with<ImageView>(R.id.icon) {
                                 it.scaleX = 0.8f
                                 it.scaleY = 0.8f
-                                it.setColorFilter(ContextCompat.getColor(this, R.color.colorPrimaryText), android.graphics.PorterDuff.Mode.MULTIPLY)
+                                (it as ImageView).setColorFilter(ContextCompat.getColor(this, R.color.colorPrimaryText), android.graphics.PorterDuff.Mode.MULTIPLY)
                             }
                             .clicked(R.id.item) {
                                 val resultIntent = Intent()
@@ -67,8 +67,8 @@ class ChooseApplicationActivity : AppCompatActivity() {
                                 finish()
                             }
                             .with<MaterialCardView>(R.id.item) {
-                                it.strokeColor = ContextCompat.getColor(this, if (selectedPackage == IntentHelper.DO_NOTHING_OPTION) R.color.colorAccent else R.color.cardBorder)
-                                it.setCardBackgroundColor(ContextCompat.getColor(this, if (selectedPackage == IntentHelper.DO_NOTHING_OPTION) R.color.colorAccent_op10 else R.color.colorPrimaryDark))
+                                (it as MaterialCardView).strokeColor = ContextCompat.getColor(this, if (selectedPackage == IntentHelper.DO_NOTHING_OPTION) R.color.colorAccent else R.color.cardBorder)
+                                (it as MaterialCardView).setCardBackgroundColor(ContextCompat.getColor(this, if (selectedPackage == IntentHelper.DO_NOTHING_OPTION) R.color.colorAccent_op10 else R.color.colorPrimaryDark))
                             }
                     }
                     IntentHelper.REFRESH_WIDGET_OPTION -> {
@@ -78,7 +78,7 @@ class ChooseApplicationActivity : AppCompatActivity() {
                             .with<ImageView>(R.id.icon) {
                                 it.scaleX = 0.8f
                                 it.scaleY = 0.8f
-                                it.setColorFilter(ContextCompat.getColor(this, R.color.colorPrimaryText), android.graphics.PorterDuff.Mode.MULTIPLY)
+                                (it as ImageView).setColorFilter(ContextCompat.getColor(this, R.color.colorPrimaryText), android.graphics.PorterDuff.Mode.MULTIPLY)
                             }
                             .clicked(R.id.item) {
                                 val resultIntent = Intent()
@@ -88,8 +88,8 @@ class ChooseApplicationActivity : AppCompatActivity() {
                                 finish()
                             }
                             .with<MaterialCardView>(R.id.item) {
-                                it.strokeColor = ContextCompat.getColor(this, if (selectedPackage == IntentHelper.REFRESH_WIDGET_OPTION) R.color.colorAccent else R.color.cardBorder)
-                                it.setCardBackgroundColor(ContextCompat.getColor(this, if (selectedPackage == IntentHelper.REFRESH_WIDGET_OPTION) R.color.colorAccent_op10 else R.color.colorPrimaryDark))
+                                (it as MaterialCardView).strokeColor = ContextCompat.getColor(this, if (selectedPackage == IntentHelper.REFRESH_WIDGET_OPTION) R.color.colorAccent else R.color.cardBorder)
+                                (it as MaterialCardView).setCardBackgroundColor(ContextCompat.getColor(this, if (selectedPackage == IntentHelper.REFRESH_WIDGET_OPTION) R.color.colorAccent_op10 else R.color.colorPrimaryDark))
                             }
                     }
                     else -> {
@@ -99,7 +99,7 @@ class ChooseApplicationActivity : AppCompatActivity() {
                             .with<ImageView>(R.id.icon) {
                                 it.scaleX = 0.8f
                                 it.scaleY = 0.8f
-                                it.setColorFilter(ContextCompat.getColor(this, R.color.colorPrimaryText), android.graphics.PorterDuff.Mode.MULTIPLY)
+                                (it as ImageView).setColorFilter(ContextCompat.getColor(this, R.color.colorPrimaryText), android.graphics.PorterDuff.Mode.MULTIPLY)
                             }
                             .clicked(R.id.item) {
                                 val resultIntent = Intent()
@@ -109,8 +109,8 @@ class ChooseApplicationActivity : AppCompatActivity() {
                                 finish()
                             }
                             .with<MaterialCardView>(R.id.item) {
-                                it.strokeColor = ContextCompat.getColor(this, if (selectedPackage == IntentHelper.DEFAULT_OPTION) R.color.colorAccent else R.color.cardBorder)
-                                it.setCardBackgroundColor(ContextCompat.getColor(this, if (selectedPackage == IntentHelper.DEFAULT_OPTION) R.color.colorAccent_op10 else R.color.colorPrimaryDark))
+                                (it as MaterialCardView).strokeColor = ContextCompat.getColor(this, if (selectedPackage == IntentHelper.DEFAULT_OPTION) R.color.colorAccent else R.color.cardBorder)
+                                (it as MaterialCardView).setCardBackgroundColor(ContextCompat.getColor(this, if (selectedPackage == IntentHelper.DEFAULT_OPTION) R.color.colorAccent_op10 else R.color.colorPrimaryDark))
                             }
                     }
                 }
@@ -123,14 +123,14 @@ class ChooseApplicationActivity : AppCompatActivity() {
                             .with(this)
                             .load(item.loadIcon(viewModel.pm))
                             .centerCrop()
-                            .into(it)
+                            .into(it as ImageView)
                     }
                     .clicked(R.id.item) {
                         saveApp(item)
                     }
                     .with<MaterialCardView>(R.id.item) {
-                        it.strokeColor = ContextCompat.getColor(this, if (selectedPackage == item.activityInfo.packageName) R.color.colorAccent else R.color.cardBorder)
-                        it.setCardBackgroundColor(ContextCompat.getColor(this, if (selectedPackage == item.activityInfo.packageName) R.color.colorAccent_op10 else R.color.colorPrimaryDark))
+                        (it as MaterialCardView).strokeColor = ContextCompat.getColor(this, if (selectedPackage == item.activityInfo.packageName) R.color.colorAccent else R.color.cardBorder)
+                        (it as MaterialCardView).setCardBackgroundColor(ContextCompat.getColor(this, if (selectedPackage == item.activityInfo.packageName) R.color.colorAccent_op10 else R.color.colorPrimaryDark))
                     }
             }
             .attachTo(binding.listView)

@@ -40,7 +40,7 @@ class SupportDevActivity : AppCompatActivity(), PurchasesUpdatedListener {
                 item.sku
                 injector
                     .with<TextView>(R.id.product_title) {
-                        it.text = when (item.sku) {
+                        (it as TextView).text = when (item.sku) {
                             "donation_coffee" -> getString(R.string.donation_coffee)
                             "donation_donuts" -> getString(R.string.donation_donuts)
                             "donation_breakfast" -> getString(R.string.donation_breakfast)
