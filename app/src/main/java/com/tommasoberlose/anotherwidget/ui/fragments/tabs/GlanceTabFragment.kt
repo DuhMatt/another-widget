@@ -99,8 +99,8 @@ class GlanceTabFragment : Fragment() {
         adapter = SlimAdapter.create()
         adapter
             .registerDefault(R.layout.glance_provider_item) { rawItem, injector ->
-                val item = rawItem as GlanceProvider
-                val provider = Constants.GlanceProviderId.from(item.id)!!
+                val item = rawItem as? GlanceProvider ?: return@registerDefault
+                val provider = Constants.GlanceProviderId.from(item.id) ?: return@registerDefault
                 injector
                     .text(R.id.title, item.title)
                     .with<ImageView>(R.id.icon) {
@@ -444,19 +444,34 @@ class GlanceTabFragment : Fragment() {
         }
     }
 
+    private var nextAlarmReceiverRegistered = false
+
     override fun onStart() {
         super.onStart()
-        requireActivity().registerReceiver(
-            nextAlarmChangeBroadcastReceiver,
-            IntentFilter(AlarmManager.ACTION_NEXT_ALARM_CLOCK_CHANGED)
-        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requireActivity().registerReceiver(
+                nextAlarmChangeBroadcastReceiver,
+                IntentFilter(AlarmManager.ACTION_NEXT_ALARM_CLOCK_CHANGED),
+                Context.RECEIVER_NOT_EXPORTED
+            )
+        } else {
+            @Suppress("DEPRECATION")
+            requireActivity().registerReceiver(
+                nextAlarmChangeBroadcastReceiver,
+                IntentFilter(AlarmManager.ACTION_NEXT_ALARM_CLOCK_CHANGED)
+            )
+        }
+        nextAlarmReceiverRegistered = true
         if (dialog != null) {
             dialog?.show()
         }
     }
 
     override fun onStop() {
-        requireActivity().unregisterReceiver(nextAlarmChangeBroadcastReceiver)
+        if (nextAlarmReceiverRegistered) {
+            requireActivity().unregisterReceiver(nextAlarmChangeBroadcastReceiver)
+            nextAlarmReceiverRegistered = false
+        }
         super.onStop()
     }
 

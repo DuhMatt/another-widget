@@ -2,19 +2,15 @@ package com.tommasoberlose.anotherwidget.ui.activities.tabs
 
 import android.Manifest
 import android.app.Activity
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Address
 import android.location.Geocoder
-import android.net.Uri
 import android.os.Bundle
 import android.os.Build
-import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import com.tommasoberlose.anotherwidget.R
 import android.view.View
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
@@ -27,39 +23,24 @@ import com.tommasoberlose.anotherwidget.databinding.ActivityCustomLocationBindin
 import com.tommasoberlose.anotherwidget.global.Preferences
 import com.tommasoberlose.anotherwidget.location.LocationRepository
 import com.tommasoberlose.anotherwidget.ui.viewmodels.tabs.CustomLocationViewModel
+import com.karumi.dexter.Dexter
+import com.karumi.dexter.MultiplePermissionsReport
+import com.karumi.dexter.PermissionToken
+import com.karumi.dexter.listener.PermissionRequest
+import com.karumi.dexter.listener.multi.MultiplePermissionsListener
 import kotlinx.coroutines.*
 import net.idik.lib.slimadapter.SlimAdapter
 import kotlin.coroutines.resume
 
 class CustomLocationActivity : AppCompatActivity() {
 
+    companion object {
+        const val EXTRA_REQUEST_CURRENT_LOCATION = "request_current_location"
+    }
+
     private lateinit var adapter: SlimAdapter
     private lateinit var viewModel: CustomLocationViewModel
     private lateinit var binding: ActivityCustomLocationBinding
-
-    private val locationPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        if (permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true ||
-            permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true
-        ) {
-            requestBackgroundLocationIfNeeded()
-        } else {
-            showLocationError()
-        }
-    }
-
-    private val backgroundLocationPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { granted ->
-        if (granted) {
-            requestCurrentLocation()
-        } else {
-            showLocationError()
-        }
-    }
-
-    private var awaitingBackgroundPermission = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -110,6 +91,10 @@ class CustomLocationActivity : AppCompatActivity() {
         subscribeUi(binding, viewModel)
 
         binding.location.requestFocus()
+
+        if (intent.getBooleanExtra(EXTRA_REQUEST_CURRENT_LOCATION, false)) {
+            binding.root.post { requestCurrentLocation() }
+        }
 
     }
 
@@ -171,71 +156,38 @@ class CustomLocationActivity : AppCompatActivity() {
     }
 
     private fun requirePermission() {
-        if (!hasLocationPermission()) {
-            locationPermissionLauncher.launch(
-                arrayOf(
-                    Manifest.permission.ACCESS_COARSE_LOCATION,
+        Dexter.withContext(this)
+            .withPermissions(
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && hasFineLocationPermission()) {
+                    Manifest.permission.ACCESS_BACKGROUND_LOCATION
+                } else {
                     Manifest.permission.ACCESS_FINE_LOCATION
-                )
+                }
             )
-            return
-        }
+            .withListener(object : MultiplePermissionsListener {
+                override fun onPermissionsChecked(report: MultiplePermissionsReport?) {
+                    if (report?.areAllPermissionsGranted() == true) {
+                        requestCurrentLocation()
+                    } else {
+                        showLocationError()
+                    }
+                }
 
-        requestBackgroundLocationIfNeeded()
+                override fun onPermissionRationaleShouldBeShown(
+                    permissions: MutableList<PermissionRequest>?,
+                    token: PermissionToken?
+                ) {
+                    token?.continuePermissionRequest()
+                }
+            })
+            .check()
     }
 
-    private fun hasLocationPermission(): Boolean {
+    private fun hasFineLocationPermission(): Boolean {
         return ContextCompat.checkSelfPermission(
-            this,
-            Manifest.permission.ACCESS_COARSE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(
             this,
             Manifest.permission.ACCESS_FINE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
-    }
-
-    private fun hasBackgroundLocationPermission(): Boolean {
-        return Build.VERSION.SDK_INT < Build.VERSION_CODES.Q || ContextCompat.checkSelfPermission(
-            this,
-            Manifest.permission.ACCESS_BACKGROUND_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-    }
-
-    private fun requestBackgroundLocationIfNeeded() {
-        if (hasBackgroundLocationPermission()) {
-            requestCurrentLocation()
-            return
-        }
-
-        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
-            backgroundLocationPermissionLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            awaitingBackgroundPermission = true
-            Toast.makeText(
-                this,
-                R.string.weather_location_background_permission,
-                Toast.LENGTH_LONG
-            ).show()
-            startActivity(
-                Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                    data = Uri.parse("package:$packageName")
-                }
-            )
-        } else {
-            requestCurrentLocation()
-        }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        if (awaitingBackgroundPermission) {
-            awaitingBackgroundPermission = false
-            if (hasBackgroundLocationPermission()) {
-                requestCurrentLocation()
-            } else {
-                showLocationError()
-            }
-        }
     }
 
     private fun requestCurrentLocation() {

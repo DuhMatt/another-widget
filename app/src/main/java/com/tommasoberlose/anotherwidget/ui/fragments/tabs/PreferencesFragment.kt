@@ -24,7 +24,6 @@ import com.tommasoberlose.anotherwidget.components.MaterialBottomSheetDialog
 import com.tommasoberlose.anotherwidget.databinding.FragmentPreferencesBinding
 import com.tommasoberlose.anotherwidget.global.Preferences
 import com.tommasoberlose.anotherwidget.helpers.CalendarHelper
-import com.tommasoberlose.anotherwidget.helpers.LanguageHelper
 import com.tommasoberlose.anotherwidget.receivers.WeatherReceiver
 import com.tommasoberlose.anotherwidget.ui.activities.MainActivity
 import com.tommasoberlose.anotherwidget.ui.viewmodels.MainViewModel
@@ -72,7 +71,6 @@ class PreferencesFragment : Fragment() {
         binding.showEventsSwitch.setCheckedImmediatelyNoEvent(Preferences.showEvents)
         binding.showWeatherSwitch.setCheckedImmediatelyNoEvent(Preferences.showWeather)
         binding.showClockSwitch.setCheckedImmediatelyNoEvent(Preferences.showClock)
-        updateLanguageLabel()
 
         binding.scrollView.viewTreeObserver.addOnScrollChangedListener {
             viewModel.fragmentScrollY.value = binding.scrollView.scrollY
@@ -146,27 +144,6 @@ class PreferencesFragment : Fragment() {
             Navigation.findNavController(it).navigate(R.id.action_tabSelectorFragment_to_clockTabFragment)
         }
 
-        binding.actionLanguage.setOnSingleClickListener {
-            val selectedLanguage = LanguageHelper.getLanguageTag(requireContext())
-            BottomSheetMenu<String>(
-                requireContext(),
-                header = getString(R.string.settings_language_title)
-            )
-                .setSelectedValue(selectedLanguage)
-                .addItem(
-                    getString(R.string.settings_language_simplified_chinese),
-                    LanguageHelper.SIMPLIFIED_CHINESE
-                )
-                .addItem(
-                    getString(R.string.settings_language_english),
-                    LanguageHelper.ENGLISH
-                )
-                .addOnSelectItemListener { languageTag ->
-                    LanguageHelper.setLanguage(requireContext(), languageTag)
-                }
-                .show()
-        }
-
         binding.showClockSwitch.setOnCheckedChangeListener { _, enabled: Boolean ->
             Preferences.showClock = enabled
         }
@@ -217,16 +194,6 @@ class PreferencesFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         binding.showEventsSwitch.setCheckedNoEvent(Preferences.showEvents && requireActivity().checkGrantedPermission(Manifest.permission.READ_CALENDAR))
-        updateLanguageLabel()
-    }
-
-    private fun updateLanguageLabel() {
-        if (::binding.isInitialized) {
-            binding.languageLabel.text = LanguageHelper.getDisplayName(
-                requireContext(),
-                LanguageHelper.getLanguageTag(requireContext())
-            )
-        }
     }
 
     private fun maintainScrollPosition(callback: () -> Unit) {

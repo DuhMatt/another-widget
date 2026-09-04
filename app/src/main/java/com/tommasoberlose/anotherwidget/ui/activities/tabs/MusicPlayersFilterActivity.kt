@@ -38,26 +38,28 @@ class MusicPlayersFilterActivity : AppCompatActivity() {
 
         adapter = SlimAdapter.create()
         adapter
-            .register<ResolveInfo>(R.layout.application_info_layout) { item, injector ->
-                injector
-                    .text(R.id.text, item.loadLabel(viewModel.pm))
-                    .with<ImageView>(R.id.icon) {
-                        Glide
-                            .with(this)
-                            .load(item.loadIcon(viewModel.pm))
-                            .centerCrop()
-                            .into(it as ImageView)
-                    }
-                    .visible(R.id.checkBox)
-                    .clicked(R.id.item) {
-                        toggleApp(item)
-                        adapter.notifyItemRangeChanged(0, adapter.data.size)
-                    }
-                    .clicked(R.id.checkBox) {
-                        toggleApp(item)
-                        adapter.notifyItemRangeChanged(0, adapter.data.size)
-                    }
-                    .checked(R.id.checkBox, MediaPlayerHelper.isMusicPlayerAccepted(item.activityInfo.packageName))
+            .registerDefault(R.layout.application_info_layout) { rawItem, injector ->
+                if (rawItem is ResolveInfo) {
+                    injector
+                        .text(R.id.text, rawItem.loadLabel(viewModel.pm))
+                        .with<ImageView>(R.id.icon) {
+                            Glide
+                                .with(this)
+                                .load(rawItem.loadIcon(viewModel.pm))
+                                .centerCrop()
+                                .into(it as ImageView)
+                        }
+                        .visible(R.id.checkBox)
+                        .clicked(R.id.item) {
+                            toggleApp(rawItem)
+                            adapter.notifyItemRangeChanged(0, adapter.data.size)
+                        }
+                        .clicked(R.id.checkBox) {
+                            toggleApp(rawItem)
+                            adapter.notifyItemRangeChanged(0, adapter.data.size)
+                        }
+                        .checked(R.id.checkBox, MediaPlayerHelper.isMusicPlayerAccepted(rawItem.activityInfo.packageName))
+                }
             }
             .attachTo(binding.listView)
 

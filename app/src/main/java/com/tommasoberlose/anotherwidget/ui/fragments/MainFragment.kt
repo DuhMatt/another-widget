@@ -3,6 +3,7 @@ package com.tommasoberlose.anotherwidget.ui.fragments
 import android.animation.ValueAnimator
 import android.content.Intent
 import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -22,7 +23,6 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.Navigation
-import androidx.navigation.fragment.FragmentNavigatorExtras
 import androidx.navigation.fragment.NavHostFragment
 import com.google.android.material.transition.MaterialSharedAxis
 import com.tommasoberlose.anotherwidget.R
@@ -99,11 +99,14 @@ class MainFragment : Fragment() {
         }
 
         binding.actionSettings.setOnSingleClickListener {
+            // The main screen intentionally has a transparent window so the wallpaper
+            // can be shown in the preview. Make the window opaque before the settings
+            // transition starts, otherwise Android can expose the wallpaper for one frame.
+            requireActivity().window.setBackgroundDrawable(
+                ColorDrawable(ContextCompat.getColor(requireContext(), R.color.colorPrimary))
+            )
             Navigation.findNavController(it).navigate(
-                R.id.action_appMainFragment_to_appSettingsFragment,
-                null,
-                null,
-                FragmentNavigatorExtras(binding.actionSettings to "action_back")
+                R.id.action_appMainFragment_to_appSettingsFragment
             )
         }
 
@@ -366,6 +369,7 @@ class MainFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
+        requireActivity().window.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         EventBus.getDefault().register(this)
         updateUI()
     }

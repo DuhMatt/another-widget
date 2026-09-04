@@ -283,6 +283,44 @@
                             style="@style/AnotherWidget.Settings.Subtitle"/>
                     </LinearLayout>
                 </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="12dp"
+                    android:paddingBottom="12dp"
+                    android:paddingLeft="8dp"
+                    android:paddingRight="8dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="?android:attr/selectableItemBackground"
+                    android:gravity="center_vertical"
+                    android:id="@+id/action_language"
+                    android:orientation="horizontal">
+                    <ImageView
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:padding="12dp"
+                        android:src="@drawable/round_translate_24"
+                        app:tint="@color/colorPrimaryText" />
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:paddingLeft="8dp"
+                        android:paddingRight="8dp"
+                        android:orientation="vertical">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            style="@style/AnotherWidget.Settings.Title"
+                            android:text="@string/settings_language_title" />
+                        <TextView
+                            android:id="@+id/language_label"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            style="@style/AnotherWidget.Settings.Subtitle" />
+                    </LinearLayout>
+                </LinearLayout>
                 <androidx.appcompat.widget.AppCompatTextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"

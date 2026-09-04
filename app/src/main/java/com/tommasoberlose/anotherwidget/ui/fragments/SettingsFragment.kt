@@ -13,7 +13,6 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.Navigation
-import androidx.transition.TransitionInflater
 import com.google.android.material.transition.MaterialSharedAxis
 import com.tommasoberlose.anotherwidget.BuildConfig
 import com.tommasoberlose.anotherwidget.R
@@ -22,6 +21,7 @@ import com.tommasoberlose.anotherwidget.databinding.FragmentAppSettingsBinding
 import com.tommasoberlose.anotherwidget.global.Preferences
 import com.tommasoberlose.anotherwidget.helpers.ActiveNotificationsHelper
 import com.tommasoberlose.anotherwidget.helpers.CalendarHelper
+import com.tommasoberlose.anotherwidget.helpers.LanguageHelper
 import com.tommasoberlose.anotherwidget.helpers.MediaPlayerHelper
 import com.tommasoberlose.anotherwidget.helpers.WeatherHelper
 import com.tommasoberlose.anotherwidget.ui.activities.settings.IntegrationsActivity
@@ -47,8 +47,6 @@ class SettingsFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        sharedElementEnterTransition = TransitionInflater.from(requireContext()).inflateTransition(android.R.transition.move)
-        sharedElementReturnTransition = TransitionInflater.from(requireContext()).inflateTransition(android.R.transition.move)
         enterTransition = MaterialSharedAxis(MaterialSharedAxis.Y, true)
         returnTransition = MaterialSharedAxis(MaterialSharedAxis.Y, false)
     }
@@ -78,6 +76,7 @@ class SettingsFragment : Fragment() {
 
         binding.showWidgetPreviewToggle.setCheckedImmediatelyNoEvent(Preferences.showPreview)
         binding.showWallpaperToggle.setCheckedImmediatelyNoEvent(Preferences.showWallpaper)
+        updateLanguageLabel()
 
         setupListener()
 
@@ -169,6 +168,26 @@ class SettingsFragment : Fragment() {
             }
         }
 
+        binding.actionLanguage.setOnSingleClickListener {
+            BottomSheetMenu<String>(
+                requireContext(),
+                header = getString(R.string.settings_language_title)
+            )
+                .setSelectedValue(LanguageHelper.getLanguageTag(requireContext()))
+                .addItem(
+                    getString(R.string.settings_language_simplified_chinese),
+                    LanguageHelper.SIMPLIFIED_CHINESE
+                )
+                .addItem(
+                    getString(R.string.settings_language_english),
+                    LanguageHelper.ENGLISH
+                )
+                .addOnSelectItemListener { languageTag ->
+                    LanguageHelper.setLanguage(requireContext(), languageTag)
+                }
+                .show()
+        }
+
         binding.actionTranslate.setOnClickListener {
             requireActivity().openURI("https://github.com/tommasoberlose/another-widget/blob/master/app/src/main/res/values/strings.xml")
         }
@@ -221,6 +240,16 @@ class SettingsFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         binding.showWallpaperToggle.setCheckedNoEvent(Preferences.showWallpaper)
+        updateLanguageLabel()
+    }
+
+    private fun updateLanguageLabel() {
+        if (::binding.isInitialized) {
+            binding.languageLabel.text = LanguageHelper.getDisplayName(
+                requireContext(),
+                LanguageHelper.getLanguageTag(requireContext())
+            )
+        }
     }
 
 }

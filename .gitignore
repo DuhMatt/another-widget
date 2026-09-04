@@ -12,3 +12,4 @@ apikey.properties
 ./.idea/*
 app/release/*
 /app/release/*
+/.learnings/

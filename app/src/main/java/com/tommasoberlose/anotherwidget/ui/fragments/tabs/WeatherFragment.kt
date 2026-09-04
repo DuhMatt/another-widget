@@ -1,6 +1,8 @@
 package com.tommasoberlose.anotherwidget.ui.fragments.tabs
 
+import android.Manifest
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -31,6 +33,12 @@ import com.tommasoberlose.anotherwidget.ui.viewmodels.MainViewModel
 import com.tommasoberlose.anotherwidget.ui.widgets.MainWidget
 import com.tommasoberlose.anotherwidget.utils.collapse
 import com.tommasoberlose.anotherwidget.utils.expand
+import com.tommasoberlose.anotherwidget.utils.checkGrantedPermission
+import com.karumi.dexter.Dexter
+import com.karumi.dexter.MultiplePermissionsReport
+import com.karumi.dexter.PermissionToken
+import com.karumi.dexter.listener.PermissionRequest
+import com.karumi.dexter.listener.multi.MultiplePermissionsListener
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -147,19 +155,61 @@ class WeatherFragment : Fragment() {
     private fun checkLocationPermission() {
         val hasSavedLocation = Preferences.customLocationLat.isNotBlank() &&
             Preferences.customLocationLon.isNotBlank()
-        if (hasSavedLocation || Preferences.customLocationAdd.isNotBlank()) {
+        val hasFinePermission = requireActivity().checkGrantedPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+        val hasBackgroundPermission = Build.VERSION.SDK_INT < Build.VERSION_CODES.R ||
+            requireActivity().checkGrantedPermission(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+        val hasManualLocation = Preferences.customLocationAdd.isNotBlank()
+
+        if (hasManualLocation || (hasSavedLocation && hasFinePermission && hasBackgroundPermission)) {
             binding.locationPermissionAlert.isVisible = false
             WeatherReceiver.setUpdates(requireContext())
         } else if (Preferences.showWeather) {
             binding.locationPermissionAlert.isVisible = true
             binding.locationPermissionAlert.setOnClickListener {
-                customLocationLauncher.launch(
-                    Intent(requireContext(), CustomLocationActivity::class.java)
-                )
+                requirePermission()
             }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && hasFinePermission && !hasBackgroundPermission) {
+                binding.locationPermissionAlert.text = getString(R.string.action_grant_permission) + " - " +
+                    requireContext().packageManager.backgroundPermissionOptionLabel
+            } else {
+                binding.locationPermissionAlert.text = getString(R.string.action_grant_permission)
+            }
+            binding.weatherProviderLocationError.isVisible = false
         } else {
             binding.locationPermissionAlert.isVisible = false
         }
+    }
+
+    private fun requirePermission() {
+        Dexter.withContext(requireContext())
+            .withPermissions(
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R &&
+                    requireActivity().checkGrantedPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+                ) {
+                    Manifest.permission.ACCESS_BACKGROUND_LOCATION
+                } else {
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                }
+            )
+            .withListener(object : MultiplePermissionsListener {
+                override fun onPermissionsChecked(report: MultiplePermissionsReport?) {
+                    if (report?.areAllPermissionsGranted() == true) {
+                        customLocationLauncher.launch(
+                            Intent(requireContext(), CustomLocationActivity::class.java).apply {
+                                putExtra(CustomLocationActivity.EXTRA_REQUEST_CURRENT_LOCATION, true)
+                            }
+                        )
+                    }
+                }
+
+                override fun onPermissionRationaleShouldBeShown(
+                    permissions: MutableList<PermissionRequest>?,
+                    token: PermissionToken?
+                ) {
+                    token?.continuePermissionRequest()
+                }
+            })
+            .check()
     }
 
     private fun checkWeatherProviderConfig() {

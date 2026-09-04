@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import android.provider.Settings
 import android.view.LayoutInflater
 import androidx.core.view.isVisible
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -38,6 +39,7 @@ import org.greenrobot.eventbus.EventBus
 class GlanceSettingsDialog(val context: Activity, val provider: Constants.GlanceProviderId, private val statusCallback: (() -> Unit)?) : BottomSheetDialog(context, R.style.BottomSheetDialogTheme) {
 
     private var binding: GlanceProviderSettingsLayoutBinding = GlanceProviderSettingsLayoutBinding.inflate(LayoutInflater.from(context))
+    private var contentAttached = false
 
     override fun show() {
 
@@ -113,7 +115,8 @@ class GlanceSettingsDialog(val context: Activity, val provider: Constants.Glance
                 dismiss()
                 context.startActivityForResult(Intent(context, AppNotificationsFilterActivity::class.java), 0)
             }
-            binding.notificationTimerLabel.text = stringArray[Preferences.hideNotificationAfter]
+            val selectedTimeout = Preferences.hideNotificationAfter.coerceIn(0, stringArray.lastIndex)
+            binding.notificationTimerLabel.text = stringArray[selectedTimeout]
             binding.actionChangeNotificationTimer.setOnClickListener {
                 val dialog = BottomSheetMenu<Int>(context, header = context.getString(R.string.glance_notification_hide_timeout_title)).setSelectedValue(Preferences.hideNotificationAfter)
                 Constants.GlanceNotificationTimer.values().forEachIndexed { index, timeout ->
@@ -216,8 +219,13 @@ class GlanceSettingsDialog(val context: Activity, val provider: Constants.Glance
             }
         }
 
-        setContentView(binding.root)
-        super.show()
+        if (!contentAttached) {
+            setContentView(binding.root)
+            contentAttached = true
+        }
+        if (!isShowing) {
+            super.show()
+        }
     }
     
     private fun checkNextAlarm() {
@@ -265,7 +273,7 @@ class GlanceSettingsDialog(val context: Activity, val provider: Constants.Glance
                 binding.warningContainer.isVisible = true
                 binding.warningTitle.text = context.getString(R.string.settings_request_notification_access)
                 binding.warningContainer.setOnClickListener {
-                    context.startActivity(Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"))
+                    openNotificationAccessSettings()
                 }
             }
             else -> {
@@ -284,7 +292,7 @@ class GlanceSettingsDialog(val context: Activity, val provider: Constants.Glance
                 binding.warningContainer.isVisible = true
                 binding.warningTitle.text = context.getString(R.string.settings_request_last_notification_access)
                 binding.warningContainer.setOnClickListener {
-                    context.startActivity(Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"))
+                    openNotificationAccessSettings()
                 }
             }
             else -> {
@@ -324,20 +332,12 @@ class GlanceSettingsDialog(val context: Activity, val provider: Constants.Glance
             binding.warningContainer.isVisible = true
             binding.warningTitle.text = context.getString(R.string.settings_request_fitness_access)
             binding.warningContainer.setOnClickListener {
-                GoogleSignIn.requestPermissions(
-                    context,
-                    1,
-                    account,
-                    ActivityDetectionReceiver.FITNESS_OPTIONS)
+                requestGoogleFitPermissions()
             }
             binding.actionConnectToGoogleFit.isVisible = true
             binding.actionDisconnectToGoogleFit.isVisible = false
             binding.actionConnectToGoogleFit.setOnClickListener {
-                GoogleSignIn.requestPermissions(
-                    context,
-                    1,
-                    account,
-                    ActivityDetectionReceiver.FITNESS_OPTIONS)
+                requestGoogleFitPermissions()
             }
             binding.actionDisconnectToGoogleFit.setOnClickListener(null)
             binding.googleFitStatusLabel.text = context.getString(R.string.google_fit_account_not_connected)
@@ -360,9 +360,11 @@ class GlanceSettingsDialog(val context: Activity, val provider: Constants.Glance
     private fun requireFitnessPermission() {
         Dexter.withContext(context)
             .withPermissions(
-                "com.google.android.gms.permission.ACTIVITY_RECOGNITION",
-                "android.gms.permission.ACTIVITY_RECOGNITION",
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) Manifest.permission.ACTIVITY_RECOGNITION else "com.google.android.gms.permission.ACTIVITY_RECOGNITION"
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    Manifest.permission.ACTIVITY_RECOGNITION
+                } else {
+                    "com.google.android.gms.permission.ACTIVITY_RECOGNITION"
+                }
             ).withListener(object: MultiplePermissionsListener {
                 override fun onPermissionsChecked(report: MultiplePermissionsReport?) {
                     checkFitnessPermission()
@@ -377,5 +379,32 @@ class GlanceSettingsDialog(val context: Activity, val provider: Constants.Glance
                 }
             })
             .check()
+    }
+
+    private fun openNotificationAccessSettings() {
+        val intent = Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
+        if (intent.resolveActivity(context.packageManager) != null) {
+            context.startActivity(intent)
+        }
+    }
+
+    private fun requestGoogleFitPermissions() {
+        val account = GoogleSignIn.getLastSignedInAccount(context)
+        if (account == null) {
+            val client = GoogleSignIn.getClient(
+                context,
+                GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                    .addExtension(ActivityDetectionReceiver.FITNESS_OPTIONS)
+                    .build()
+            )
+            context.startActivityForResult(client.signInIntent, 2)
+        } else {
+            GoogleSignIn.requestPermissions(
+                context,
+                1,
+                account,
+                ActivityDetectionReceiver.FITNESS_OPTIONS
+            )
+        }
     }
 }
