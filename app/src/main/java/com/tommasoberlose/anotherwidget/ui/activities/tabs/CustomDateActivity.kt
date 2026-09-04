@@ -41,11 +41,13 @@ class CustomDateActivity : AppCompatActivity() {
 
         adapter = SlimAdapter.create()
         adapter
-            .register<String>(R.layout.custom_date_example_item) { item, injector ->
-                injector
-                    .text(R.id.custom_date_example_format, item)
-                    .text(R.id.custom_date_example_value, SimpleDateFormat(item, Locale.getDefault()).format(
-                        DATE.time))
+            .registerDefault(R.layout.custom_date_example_item) { rawItem, injector ->
+                if (rawItem is String) {
+                    injector
+                        .text(R.id.custom_date_example_format, rawItem)
+                        .text(R.id.custom_date_example_value, SimpleDateFormat(rawItem, Locale.getDefault()).format(
+                            DATE.time))
+                }
             }
             .attachTo(binding.listView)
 

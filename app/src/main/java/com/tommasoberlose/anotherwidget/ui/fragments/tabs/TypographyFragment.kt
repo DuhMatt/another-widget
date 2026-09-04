@@ -43,7 +43,7 @@ class TypographyFragment : Fragment() {
     }
 
     private lateinit var viewModel: MainViewModel
-    private lateinit var colors: IntArray
+    private var colors: IntArray = intArrayOf()
 
     private lateinit var binding: FragmentTabTypographyBinding
 
@@ -74,12 +74,7 @@ class TypographyFragment : Fragment() {
         super.onActivityCreated(savedInstanceState)
 
         setupListener()
-        lifecycleScope.launch(Dispatchers.IO) {
-            val lazyColors = requireContext().resources.getIntArray(R.array.material_colors)
-            withContext(Dispatchers.Main) {
-                colors = lazyColors
-            }
-        }
+        colors = requireContext().resources.getIntArray(R.array.material_colors)
 
         binding.scrollView.viewTreeObserver.addOnScrollChangedListener {
             viewModel.fragmentScrollY.value = binding.scrollView.scrollY

@@ -40,7 +40,6 @@ class BottomSheetColorPicker(
     private val hideCopyPaste: Boolean = false,
 ) : BottomSheetDialog(context, R.style.BottomSheetDialogTheme) {
 
-    private var loadingJobs: ArrayList<Job> = ArrayList()
     private lateinit var adapter: SlimAdapter
     private var alphaDebouncing: Job? = null
 
@@ -65,11 +64,14 @@ class BottomSheetColorPicker(
                 context.pasteFromClipboard { color, alpha ->
                     binding.alphaSelector.setProgress(alpha.toIntValue().toFloat())
 
-                    adapter.notifyItemChanged(adapter.data.indexOf(getSelected?.invoke()))
+                    val oldPosition = adapter.data.indexOf(getSelected?.invoke())
+                    if (oldPosition >= 0) adapter.notifyItemChanged(oldPosition)
                     onColorSelected?.invoke(Color.parseColor(color))
                     val idx = colors.toList().indexOf(getSelected?.invoke())
-                    adapter.notifyItemChanged(idx)
-                    (listBinding.root.layoutManager as GridLayoutManager).scrollToPositionWithOffset(idx,0)
+                    if (idx >= 0) {
+                        adapter.notifyItemChanged(idx)
+                        (listBinding.root.layoutManager as GridLayoutManager).scrollToPositionWithOffset(idx, 0)
+                    }
                 }
             }
             binding.actionPaste.isVisible = context.isClipboardColor()
@@ -102,62 +104,56 @@ class BottomSheetColorPicker(
         // List
         adapter = SlimAdapter.create()
 
-        loadingJobs.add(GlobalScope.launch(Dispatchers.IO) {
-            listBinding.root.setHasFixedSize(true)
-            val mLayoutManager = GridLayoutManager(context, 6)
-            listBinding.root.layoutManager = mLayoutManager
+        listBinding.root.setHasFixedSize(true)
+        val mLayoutManager = GridLayoutManager(context, 6)
+        listBinding.root.layoutManager = mLayoutManager
 
-            adapter
-                .register<Int>(R.layout.color_picker_menu_item) { item, injector ->
-                    injector
-                        .with<MaterialCardView>(R.id.color) {
-                            (it as MaterialCardView).setCardBackgroundColor(ColorStateList.valueOf(item))
-                            (it as MaterialCardView).strokeWidth = if ((colors.indexOf(item) == 0 && !context.isDarkTheme()) || (colors.indexOf(item) == 10 && context.isDarkTheme())) 2 else 0
+        adapter
+            .registerDefault(R.layout.color_picker_menu_item) { rawItem, injector ->
+                val item = rawItem as? Int ?: return@registerDefault
+                injector
+                    .with<MaterialCardView>(R.id.color) {
+                        (it as MaterialCardView).setCardBackgroundColor(ColorStateList.valueOf(item))
+                        (it as MaterialCardView).strokeWidth = if ((colors.indexOf(item) == 0 && !context.isDarkTheme()) || (colors.indexOf(item) == 10 && context.isDarkTheme())) 2 else 0
+                    }
+                    .with<AppCompatImageView>(R.id.check) {
+                        if (getSelected?.invoke() == item) {
+                            (it as AppCompatImageView).setColorFilter(
+                                ContextCompat.getColor(
+                                    context,
+                                    if (item.isColorDark()) android.R.color.white else android.R.color.black
+                                ),
+                                android.graphics.PorterDuff.Mode.MULTIPLY
+                            )
+                            it.isVisible = true
+                        } else {
+                            it.isVisible = false
                         }
-                        .with<AppCompatImageView>(R.id.check) {
-                            if (getSelected?.invoke() == item) {
-                                (it as AppCompatImageView).setColorFilter(
-                                    ContextCompat.getColor(
-                                        context,
-                                        if (item.isColorDark()) android.R.color.white else android.R.color.black
-                                    ),
-                                    android.graphics.PorterDuff.Mode.MULTIPLY
-                                )
-                                it.isVisible = true
-                            } else {
-                                it.isVisible = false
-                            }
-                        }
-                        .clicked(R.id.color) {
-                            adapter.notifyItemChanged(adapter.data.indexOf(getSelected?.invoke()))
-                            onColorSelected?.invoke(item)
-                            val position = adapter.data.indexOf(item)
+                    }
+                    .clicked(R.id.color) {
+                        val oldPosition = adapter.data.indexOf(getSelected?.invoke())
+                        if (oldPosition >= 0) adapter.notifyItemChanged(oldPosition)
+                        onColorSelected?.invoke(item)
+                        val position = adapter.data.indexOf(item)
+                        if (position >= 0) {
                             adapter.notifyItemChanged(position)
-                            (listBinding.root.layoutManager as GridLayoutManager).scrollToPositionWithOffset(position,0)
+                            mLayoutManager.scrollToPositionWithOffset(position, 0)
                         }
-                }
-                .attachTo(listBinding.root)
-
-            adapter.updateData(colors.toList())
-
-            withContext(Dispatchers.Main) {
-                binding.loader.isVisible = false
-                binding.listContainer.addView(listBinding.root)
-                this@BottomSheetColorPicker.behavior.state = BottomSheetBehavior.STATE_EXPANDED
-                binding.listContainer.isVisible = true
-
-                val idx = colors.toList().indexOf(getSelected?.invoke())
-                (listBinding.root.layoutManager as GridLayoutManager).scrollToPositionWithOffset(idx,0)
+                    }
             }
-        })
+            .attachTo(listBinding.root)
+
+        adapter.updateData(colors.toList())
+        binding.loader.isVisible = false
+        if (listBinding.root.parent == null) binding.listContainer.addView(listBinding.root)
+        binding.listContainer.isVisible = true
 
         setContentView(binding.root)
         super.show()
-    }
+        behavior.state = BottomSheetBehavior.STATE_EXPANDED
 
-    override fun onStop() {
-        loadingJobs.forEach { it.cancel() }
-        super.onStop()
+        val idx = colors.toList().indexOf(getSelected?.invoke())
+        if (idx >= 0) mLayoutManager.scrollToPositionWithOffset(idx, 0)
     }
 
 }

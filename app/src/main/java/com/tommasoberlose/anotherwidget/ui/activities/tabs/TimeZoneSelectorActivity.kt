@@ -50,43 +50,47 @@ class TimeZoneSelectorActivity : AppCompatActivity() {
 
         adapter = SlimAdapter.create()
         adapter
-            .register<String>(R.layout.custom_location_item) { _, injector ->
-                injector
-                    .text(R.id.text, getString(R.string.no_time_zone_label))
-                    .clicked(R.id.text) {
-                        Preferences.bulk {
-                            altTimezoneId = ""
-                            altTimezoneLabel = ""
-                        }
-                        MainWidget.updateWidget(this@TimeZoneSelectorActivity)
-                        setResult(Activity.RESULT_OK)
-                        finish()
-                    }
-            }
-            .register<Address>(R.layout.custom_location_item) { item, injector ->
-                injector.text(R.id.text, item.getAddressLine(0))
-                injector.clicked(R.id.item) {
-                    binding.loader.visibility = View.VISIBLE
-                    lifecycleScope.launch(Dispatchers.IO) {
-                        val networkApi = TimeZonesApi(this@TimeZoneSelectorActivity)
-                        val id = networkApi.getTimeZone(item.latitude.toString(), item.longitude.toString())
-
-                        if (id != null) {
-                            Preferences.bulk {
-                                altTimezoneId = id
-                                altTimezoneLabel = try {
-                                    item.locality
-                                } catch (ex: Exception) {
-                                    item.getAddressLine(0)
+            .registerDefault(R.layout.custom_location_item) { rawItem, injector ->
+                when (rawItem) {
+                    is String -> {
+                        injector
+                            .text(R.id.text, getString(R.string.no_time_zone_label))
+                            .clicked(R.id.text) {
+                                Preferences.bulk {
+                                    altTimezoneId = ""
+                                    altTimezoneLabel = ""
                                 }
+                                MainWidget.updateWidget(this@TimeZoneSelectorActivity)
+                                setResult(Activity.RESULT_OK)
+                                finish()
                             }
-                            MainWidget.updateWidget(this@TimeZoneSelectorActivity)
-                            setResult(Activity.RESULT_OK)
-                            finish()
-                        } else {
-                            withContext(Dispatchers.Main) {
-                                binding.loader.visibility = View.INVISIBLE
-                                toast(getString(R.string.time_zone_search_error_message))
+                        }
+                    is Address -> {
+                        injector.text(R.id.text, rawItem.getAddressLine(0))
+                        injector.clicked(R.id.item) {
+                            binding.loader.visibility = View.VISIBLE
+                            lifecycleScope.launch(Dispatchers.IO) {
+                                val networkApi = TimeZonesApi(this@TimeZoneSelectorActivity)
+                                val id = networkApi.getTimeZone(rawItem.latitude.toString(), rawItem.longitude.toString())
+
+                                if (id != null) {
+                                    Preferences.bulk {
+                                        altTimezoneId = id
+                                        altTimezoneLabel = try {
+                                            rawItem.locality
+                                        } catch (ex: Exception) {
+                                            rawItem.getAddressLine(0)
+                                        }
+                                    }
+                                    MainWidget.updateWidget(this@TimeZoneSelectorActivity)
+                                    setResult(Activity.RESULT_OK)
+                                    finish()
+                                } else {
+                                    withContext(Dispatchers.Main) {
+                                        binding.loader.visibility = View.INVISIBLE
+                                        toast(getString(R.string.time_zone_search_error_message))
+                                    }
+                                }
                             }
                         }
                     }

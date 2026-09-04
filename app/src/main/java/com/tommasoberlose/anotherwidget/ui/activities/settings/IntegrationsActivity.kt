@@ -27,10 +27,8 @@ class IntegrationsActivity : AppCompatActivity() {
 
         adapter = SlimAdapter.create()
         adapter
-            .register<String>(R.layout.application_info_layout) { _, injector ->
-                injector
-                    .text(R.id.text, getString(R.string.default_name))
-
+            .registerDefault(R.layout.application_info_layout) { _, injector ->
+                injector.text(R.id.text, getString(R.string.default_name))
             }
             .attachTo(binding.listView)
 

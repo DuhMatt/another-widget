@@ -48,8 +48,8 @@ class ChooseApplicationActivity : AppCompatActivity() {
 
         adapter = SlimAdapterEx.create()
         adapter
-            .register<String>(R.layout.application_info_layout) { item, injector ->
-                when (item) {
+            .registerDefault(R.layout.application_info_layout) { rawItem, injector ->
+                when (rawItem) {
                     IntentHelper.DO_NOTHING_OPTION -> {
                         injector
                             .text(R.id.text, getString(R.string.gestures_do_nothing))
@@ -92,46 +92,26 @@ class ChooseApplicationActivity : AppCompatActivity() {
                                 (it as MaterialCardView).setCardBackgroundColor(ContextCompat.getColor(this, if (selectedPackage == IntentHelper.REFRESH_WIDGET_OPTION) R.color.colorAccent_op10 else R.color.colorPrimaryDark))
                             }
                     }
-                    else -> {
+                    is ResolveInfo -> {
                         injector
-                            .text(R.id.text, getString(R.string.default_name))
-                            .image(R.id.icon, R.drawable.round_add_to_home_screen_24)
+                            .text(R.id.text, rawItem.loadLabel(viewModel.pm))
                             .with<ImageView>(R.id.icon) {
-                                it.scaleX = 0.8f
-                                it.scaleY = 0.8f
-                                (it as ImageView).setColorFilter(ContextCompat.getColor(this, R.color.colorPrimaryText), android.graphics.PorterDuff.Mode.MULTIPLY)
+                                Glide
+                                    .with(this)
+                                    .load(rawItem.loadIcon(viewModel.pm))
+                                    .centerCrop()
+                                    .into(it as ImageView)
                             }
                             .clicked(R.id.item) {
-                                val resultIntent = Intent()
-                                resultIntent.putExtra(Constants.RESULT_APP_NAME, IntentHelper.DEFAULT_OPTION)
-                                resultIntent.putExtra(Constants.RESULT_APP_PACKAGE, IntentHelper.DEFAULT_OPTION)
-                                setResult(Activity.RESULT_OK, resultIntent)
-                                finish()
+                                saveApp(rawItem)
                             }
                             .with<MaterialCardView>(R.id.item) {
-                                (it as MaterialCardView).strokeColor = ContextCompat.getColor(this, if (selectedPackage == IntentHelper.DEFAULT_OPTION) R.color.colorAccent else R.color.cardBorder)
-                                (it as MaterialCardView).setCardBackgroundColor(ContextCompat.getColor(this, if (selectedPackage == IntentHelper.DEFAULT_OPTION) R.color.colorAccent_op10 else R.color.colorPrimaryDark))
+                                (it as MaterialCardView).strokeColor = ContextCompat.getColor(this, if (selectedPackage == rawItem.activityInfo.packageName) R.color.colorAccent else R.color.cardBorder)
+                                (it as MaterialCardView).setCardBackgroundColor(ContextCompat.getColor(this, if (selectedPackage == rawItem.activityInfo.packageName) R.color.colorAccent_op10 else R.color.colorPrimaryDark))
                             }
                     }
+                    else -> Unit
                 }
-            }
-            .register<ResolveInfo>(R.layout.application_info_layout) { item, injector ->
-                injector
-                    .text(R.id.text, item.loadLabel(viewModel.pm))
-                    .with<ImageView>(R.id.icon) {
-                        Glide
-                            .with(this)
-                            .load(item.loadIcon(viewModel.pm))
-                            .centerCrop()
-                            .into(it as ImageView)
-                    }
-                    .clicked(R.id.item) {
-                        saveApp(item)
-                    }
-                    .with<MaterialCardView>(R.id.item) {
-                        (it as MaterialCardView).strokeColor = ContextCompat.getColor(this, if (selectedPackage == item.activityInfo.packageName) R.color.colorAccent else R.color.cardBorder)
-                        (it as MaterialCardView).setCardBackgroundColor(ContextCompat.getColor(this, if (selectedPackage == item.activityInfo.packageName) R.color.colorAccent_op10 else R.color.colorPrimaryDark))
-                    }
             }
             .attachTo(binding.listView)
 

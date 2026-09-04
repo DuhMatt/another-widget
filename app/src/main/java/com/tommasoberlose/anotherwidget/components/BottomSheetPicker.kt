@@ -36,7 +36,6 @@ class BottomSheetPicker<T>(
     private val onItemSelected: ((selectedValue: T?) -> Unit)? = null,
 ) : BottomSheetDialog(context, R.style.BottomSheetDialogTheme) {
 
-    private var loadingJobs: ArrayList<Job> = ArrayList()
     private lateinit var adapter: SlimAdapter
 
     private var binding: BottomSheetMenuHorBinding = BottomSheetMenuHorBinding.inflate(
@@ -58,49 +57,41 @@ class BottomSheetPicker<T>(
         // List
         adapter = SlimAdapter.create()
 
-        loadingJobs.add(GlobalScope.launch(Dispatchers.IO) {
-            listBinding.root.setHasFixedSize(true)
-            val mLayoutManager = LinearLayoutManager(context)
-            listBinding.root.layoutManager = mLayoutManager
+        listBinding.root.setHasFixedSize(true)
+        val mLayoutManager = LinearLayoutManager(context)
+        listBinding.root.layoutManager = mLayoutManager
 
-            adapter
-                .register<Int>(R.layout.bottom_sheet_menu_item) { position, injector ->
-                    val item = items[position]
-                    val isSelected = item.value == getSelected?.invoke()
-                    injector
-                        .text(R.id.label, item.title)
-                        .textColor(R.id.label, ContextCompat.getColor(context, if (isSelected) R.color.colorAccent else R.color.colorSecondaryText))
-                        .selected(R.id.item, isSelected)
-                        .clicked(R.id.item) {
-                            val oldIdx = items.toList().indexOfFirst { it.value == getSelected?.invoke() }
-                            onItemSelected?.invoke(item.value)
-                            adapter.notifyItemChanged(position)
-                            adapter.notifyItemChanged(oldIdx)
-                            (listBinding.root.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(position,0)
-                        }
-                }
-                .attachTo(listBinding.root)
-
-            adapter.updateData((items.indices).toList())
-
-            withContext(Dispatchers.Main) {
-                binding.loader.isVisible = false
-                binding.listContainer.addView(listBinding.root)
-                this@BottomSheetPicker.behavior.state = BottomSheetBehavior.STATE_EXPANDED
-                binding.listContainer.isVisible = true
-
-                val idx = items.toList().indexOfFirst { it.value == getSelected?.invoke() }
-                (listBinding.root.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(idx,0)
+        adapter
+            .registerDefault(R.layout.bottom_sheet_menu_item) { rawPosition, injector ->
+                val position = rawPosition as? Int ?: return@registerDefault
+                if (position !in items.indices) return@registerDefault
+                val item = items[position]
+                val isSelected = item.value == getSelected?.invoke()
+                injector
+                    .text(R.id.label, item.title)
+                    .textColor(R.id.label, ContextCompat.getColor(context, if (isSelected) R.color.colorAccent else R.color.colorSecondaryText))
+                    .selected(R.id.item, isSelected)
+                    .clicked(R.id.item) {
+                        val oldIdx = items.toList().indexOfFirst { it.value == getSelected?.invoke() }
+                        onItemSelected?.invoke(item.value)
+                        adapter.notifyItemChanged(position)
+                        if (oldIdx >= 0) adapter.notifyItemChanged(oldIdx)
+                        (listBinding.root.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(position, 0)
+                    }
             }
-        })
+            .attachTo(listBinding.root)
+
+        adapter.updateData(items.indices.toList())
+        binding.loader.isVisible = false
+        if (listBinding.root.parent == null) binding.listContainer.addView(listBinding.root)
+        binding.listContainer.isVisible = true
 
         setContentView(binding.root)
         super.show()
-    }
+        behavior.state = BottomSheetBehavior.STATE_EXPANDED
 
-    override fun onStop() {
-        loadingJobs.forEach { it.cancel() }
-        super.onStop()
+        val idx = items.toList().indexOfFirst { it.value == getSelected?.invoke() }
+        if (idx >= 0) mLayoutManager.scrollToPositionWithOffset(idx, 0)
     }
 
     class MenuItem<T>(val title: String, val value: T? = null)

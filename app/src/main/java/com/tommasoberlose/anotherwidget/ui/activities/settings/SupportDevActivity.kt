@@ -36,22 +36,23 @@ class SupportDevActivity : AppCompatActivity(), PurchasesUpdatedListener {
 
         adapter = SlimAdapter.create()
         adapter
-            .register<SkuDetails>(R.layout.inapp_product_layout) { item, injector ->
-                item.sku
-                injector
-                    .with<TextView>(R.id.product_title) {
-                        (it as TextView).text = when (item.sku) {
+            .registerDefault(R.layout.inapp_product_layout) { rawItem, injector ->
+                if (rawItem is SkuDetails) {
+                    injector
+                        .with<TextView>(R.id.product_title) {
+                            (it as TextView).text = when (rawItem.sku) {
                             "donation_coffee" -> getString(R.string.donation_coffee)
                             "donation_donuts" -> getString(R.string.donation_donuts)
                             "donation_breakfast" -> getString(R.string.donation_breakfast)
                             "donation_lunch" -> getString(R.string.donation_lunch)
                             else -> ""
+                            }
                         }
-                    }
-                    .text(R.id.product_price, item.price)
-                    .clicked(R.id.item) {
-                        viewModel.purchase(this, item)
-                    }
+                        .text(R.id.product_price, rawItem.price)
+                        .clicked(R.id.item) {
+                            viewModel.purchase(this, rawItem)
+                        }
+                }
             }
             .attachTo(binding.listView)
 

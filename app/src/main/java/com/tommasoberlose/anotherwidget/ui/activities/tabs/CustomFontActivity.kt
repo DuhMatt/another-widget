@@ -60,81 +60,79 @@ class CustomFontActivity : AppCompatActivity() {
             }
         })
         adapter
-            .register<String>(R.layout.list_item) { item, injector ->
-                injector
-                    .text(R.id.text, item)
-                    .with<TextView>(R.id.text) {
-                        val googleSans: Typeface = when (Preferences.customFontVariant) {
-                            "100" -> Typeface.createFromAsset(this.assets, "fonts/google_sans_thin.ttf")
-                            "200" -> Typeface.createFromAsset(this.assets, "fonts/google_sans_light.ttf")
-                            "500" -> Typeface.createFromAsset(this.assets, "fonts/google_sans_medium.ttf")
-                            "700" -> Typeface.createFromAsset(this.assets, "fonts/google_sans_bold.ttf")
-                            "800" -> Typeface.createFromAsset(this.assets, "fonts/google_sans_black.ttf")
-                            else -> Typeface.createFromAsset(this.assets, "fonts/google_sans_regular.ttf")
-                        }
-                        (it as TextView).typeface = googleSans
-                    }
-
-                injector.clicked(R.id.text) {
-                    val dialog = BottomSheetMenu<String>(this, header = item)
-                    listOf("100", "200", "regular", "500", "700", "800").forEachIndexed { _, s ->
-                        dialog.addItem(SettingsStringHelper.getVariantLabel(this, s), s)
-                    }
-                    dialog.addOnSelectItemListener { value ->
-                        saveGoogleSansFont(value)
-                    }.show()
-                }
-            }
-            .register<Font>(R.layout.list_item) { item, injector ->
-                injector
-                    .text(R.id.text, item.fontFamily)
-                    .with<TextView>(R.id.text) {
-                        val request = FontRequest(
-                            "com.google.android.gms.fonts",
-                            "com.google.android.gms",
-                            item.queryString,
-                            R.array.com_google_android_gms_fonts_certs
-                        )
-
-
-                        val callback = object : FontsContractCompat.FontRequestCallback() {
-                            override fun onTypefaceRetrieved(typeface: Typeface) {
-                                (it as TextView).typeface = typeface
-                                it.isVisible = true
-
-                                it.measure(
-                                    ViewGroup.LayoutParams.MATCH_PARENT,
-                                    ViewGroup.LayoutParams.WRAP_CONTENT
-                                )
+            .registerDefault(R.layout.list_item) { rawItem, injector ->
+                when (rawItem) {
+                    is String -> {
+                        injector
+                            .text(R.id.text, rawItem)
+                            .with<TextView>(R.id.text) {
+                                val googleSans: Typeface = when (Preferences.customFontVariant) {
+                                    "100" -> Typeface.createFromAsset(this.assets, "fonts/google_sans_thin.ttf")
+                                    "200" -> Typeface.createFromAsset(this.assets, "fonts/google_sans_light.ttf")
+                                    "500" -> Typeface.createFromAsset(this.assets, "fonts/google_sans_medium.ttf")
+                                    "700" -> Typeface.createFromAsset(this.assets, "fonts/google_sans_bold.ttf")
+                                    "800" -> Typeface.createFromAsset(this.assets, "fonts/google_sans_black.ttf")
+                                    else -> Typeface.createFromAsset(this.assets, "fonts/google_sans_regular.ttf")
+                                }
+                                (it as TextView).typeface = googleSans
                             }
 
-                            override fun onTypefaceRequestFailed(reason: Int) {
-                                it.isVisible = false
-                                it.layoutParams = it.layoutParams.apply {
-                                    height = 0
+                        injector.clicked(R.id.text) {
+                            val dialog = BottomSheetMenu<String>(this, header = rawItem)
+                            listOf("100", "200", "regular", "500", "700", "800").forEach { variant ->
+                                dialog.addItem(SettingsStringHelper.getVariantLabel(this, variant), variant)
+                            }
+                            dialog.addOnSelectItemListener { value ->
+                                saveGoogleSansFont(value)
+                            }.show()
+                        }
+                    }
+                    is Font -> {
+                        injector
+                            .text(R.id.text, rawItem.fontFamily)
+                            .with<TextView>(R.id.text) {
+                                val request = FontRequest(
+                                    "com.google.android.gms.fonts",
+                                    "com.google.android.gms",
+                                    rawItem.queryString,
+                                    R.array.com_google_android_gms_fonts_certs
+                                )
+
+                                val callback = object : FontsContractCompat.FontRequestCallback() {
+                                    override fun onTypefaceRetrieved(typeface: Typeface) {
+                                        (it as TextView).typeface = typeface
+                                        it.isVisible = true
+                                        it.measure(
+                                            ViewGroup.LayoutParams.MATCH_PARENT,
+                                            ViewGroup.LayoutParams.WRAP_CONTENT
+                                        )
+                                    }
+
+                                    override fun onTypefaceRequestFailed(reason: Int) {
+                                        it.isVisible = false
+                                        it.layoutParams = it.layoutParams.apply { height = 0 }
+                                    }
+                                }
+
+                                val handlerThread = HandlerThread(rawItem.fontFamily)
+                                handlerThread.start()
+                                FontsContractCompat.requestFont(this, request, callback, Handler(handlerThread.looper))
+                            }
+
+                        injector.clicked(R.id.text) {
+                            val dialog = BottomSheetMenu<Int>(this, header = rawItem.fontFamily)
+                            if (rawItem.fontVariants.isEmpty()) {
+                                dialog.addItem(SettingsStringHelper.getVariantLabel(this, "regular"), -1)
+                            } else {
+                                rawItem.fontVariants.forEachIndexed { index, variant ->
+                                    dialog.addItem(SettingsStringHelper.getVariantLabel(this, variant), index)
                                 }
                             }
+                            dialog.addOnSelectItemListener { value ->
+                                saveFont(rawItem, value)
+                            }.show()
                         }
-
-                        val handlerThread = HandlerThread(item.fontFamily)
-                        handlerThread.start()
-                        val mHandler = Handler(handlerThread.looper)
-                        FontsContractCompat.requestFont(this, request, callback, mHandler)
                     }
-
-                injector.clicked(R.id.text) {
-                    val dialog = BottomSheetMenu<Int>(this, header = item.fontFamily)
-                    if (item.fontVariants.isEmpty()) {
-                        dialog.addItem(SettingsStringHelper.getVariantLabel(this, "regular"), -1)
-                    } else {
-                        item.fontVariants
-                            .forEachIndexed { index, s ->
-                                dialog.addItem(SettingsStringHelper.getVariantLabel(this, s), index)
-                            }
-                    }
-                    dialog.addOnSelectItemListener { value ->
-                        saveFont(item, value)
-                    }.show()
                 }
             }
             .attachTo(binding.listView)
