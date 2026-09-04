@@ -22,6 +22,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.Navigation
+import androidx.navigation.fragment.FragmentNavigatorExtras
 import androidx.navigation.fragment.NavHostFragment
 import com.google.android.material.transition.MaterialSharedAxis
 import com.tommasoberlose.anotherwidget.R
@@ -98,7 +99,12 @@ class MainFragment : Fragment() {
         }
 
         binding.actionSettings.setOnSingleClickListener {
-            Navigation.findNavController(it).navigate(R.id.action_appMainFragment_to_appSettingsFragment,)
+            Navigation.findNavController(it).navigate(
+                R.id.action_appMainFragment_to_appSettingsFragment,
+                null,
+                null,
+                FragmentNavigatorExtras(binding.actionSettings to "action_back")
+            )
         }
 
         binding.preview.layoutParams = binding.preview.layoutParams.apply {

@@ -172,6 +172,7 @@
     <string name="weather_provider_error_wrong_location">The current location is not supported.</string>
     <string name="weather_provider_error_missing_location">Please select a valid location.</string>
     <string name="weather_location_unavailable">Unable to determine your current location. Turn on Location and try again.</string>
+    <string name="weather_location_background_permission">To update weather in the background, select “Allow all the time” in the app’s location permission settings.</string>
     <string name="weather_provider_error_expired_key">It seems that your API key has expired.</string>
     <string name="weather_provider_error_invalid_key">API key not valid, or not yet activated.</string>
     <string name="weather_provider_error_misconfigured">The weather provider is wrongly configured.</string>
@@ -305,6 +306,9 @@
     <string name="settings_not_visible">Hidden</string>
     <string name="support_translations_title">Help with translations</string>
     <string name="support_translations_subtitle">Open a pull request on GitHub</string>
+    <string name="settings_language_title">Language</string>
+    <string name="settings_language_simplified_chinese">简体中文</string>
+    <string name="settings_language_english">English</string>
     <string name="support_website_title">Check my other projects</string>
     <string name="support_website_subtitle">Same developer, many possibilities</string>
     <string name="error">Ooops, something went wrong!</string>

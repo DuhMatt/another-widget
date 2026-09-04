@@ -1,14 +1,20 @@
 package com.tommasoberlose.anotherwidget
 
 import android.app.Application
+import android.content.Context
 import android.os.Build
 import androidx.appcompat.app.AppCompatDelegate
 import com.chibatching.kotpref.Kotpref
 import com.tommasoberlose.anotherwidget.global.Preferences
 import com.tommasoberlose.anotherwidget.helpers.CrashlyticsHelper
+import com.tommasoberlose.anotherwidget.helpers.LanguageHelper
 import net.danlew.android.joda.JodaTimeAndroid
 
 class AWApplication : Application() {
+    override fun attachBaseContext(base: Context) {
+        super.attachBaseContext(LanguageHelper.wrap(base))
+    }
+
     override fun onCreate() {
         super.onCreate()
 

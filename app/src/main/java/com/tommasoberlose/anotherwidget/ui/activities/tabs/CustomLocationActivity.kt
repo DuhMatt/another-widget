@@ -2,11 +2,14 @@ package com.tommasoberlose.anotherwidget.ui.activities.tabs
 
 import android.Manifest
 import android.app.Activity
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Address
 import android.location.Geocoder
+import android.net.Uri
 import android.os.Bundle
 import android.os.Build
+import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import com.tommasoberlose.anotherwidget.R
@@ -40,11 +43,23 @@ class CustomLocationActivity : AppCompatActivity() {
         if (permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true ||
             permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true
         ) {
+            requestBackgroundLocationIfNeeded()
+        } else {
+            showLocationError()
+        }
+    }
+
+    private val backgroundLocationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
             requestCurrentLocation()
         } else {
             showLocationError()
         }
     }
+
+    private var awaitingBackgroundPermission = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -156,16 +171,17 @@ class CustomLocationActivity : AppCompatActivity() {
     }
 
     private fun requirePermission() {
-        if (hasLocationPermission()) {
-            requestCurrentLocation()
-        } else {
+        if (!hasLocationPermission()) {
             locationPermissionLauncher.launch(
                 arrayOf(
                     Manifest.permission.ACCESS_COARSE_LOCATION,
                     Manifest.permission.ACCESS_FINE_LOCATION
                 )
             )
+            return
         }
+
+        requestBackgroundLocationIfNeeded()
     }
 
     private fun hasLocationPermission(): Boolean {
@@ -176,6 +192,50 @@ class CustomLocationActivity : AppCompatActivity() {
             this,
             Manifest.permission.ACCESS_FINE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun hasBackgroundLocationPermission(): Boolean {
+        return Build.VERSION.SDK_INT < Build.VERSION_CODES.Q || ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.ACCESS_BACKGROUND_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun requestBackgroundLocationIfNeeded() {
+        if (hasBackgroundLocationPermission()) {
+            requestCurrentLocation()
+            return
+        }
+
+        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
+            backgroundLocationPermissionLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            awaitingBackgroundPermission = true
+            Toast.makeText(
+                this,
+                R.string.weather_location_background_permission,
+                Toast.LENGTH_LONG
+            ).show()
+            startActivity(
+                Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                    data = Uri.parse("package:$packageName")
+                }
+            )
+        } else {
+            requestCurrentLocation()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (awaitingBackgroundPermission) {
+            awaitingBackgroundPermission = false
+            if (hasBackgroundLocationPermission()) {
+                requestCurrentLocation()
+            } else {
+                showLocationError()
+            }
+        }
     }
 
     private fun requestCurrentLocation() {

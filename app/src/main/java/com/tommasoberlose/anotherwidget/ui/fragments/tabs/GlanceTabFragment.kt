@@ -98,7 +98,8 @@ class GlanceTabFragment : Fragment() {
 
         adapter = SlimAdapter.create()
         adapter
-            .register<GlanceProvider>(R.layout.glance_provider_item) { item, injector ->
+            .registerDefault(R.layout.glance_provider_item) { rawItem, injector ->
+                val item = rawItem as GlanceProvider
                 val provider = Constants.GlanceProviderId.from(item.id)!!
                 injector
                     .text(R.id.title, item.title)
