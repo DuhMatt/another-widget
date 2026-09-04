@@ -2,11 +2,11 @@ package com.tommasoberlose.anotherwidget.ui.fragments
 
 import android.animation.ValueAnimator
 import android.content.Intent
+import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import android.util.DisplayMetrics
 import android.util.Log
 import android.util.TypedValue
 import android.view.Gravity
@@ -114,42 +114,7 @@ class MainFragment : Fragment() {
 
     private fun subscribeUi(viewModel: MainViewModel) {
         viewModel.showWallpaper.observe(viewLifecycleOwner) {
-            if (it) {
-                val wallpaper = requireActivity().getCurrentWallpaper()
-                binding.widgetBg.setImageDrawable(if (it) wallpaper else null)
-                if (wallpaper != null) {
-                    binding.widgetBg.layoutParams =
-                        (binding.widgetBg.layoutParams as ViewGroup.MarginLayoutParams).apply {
-
-                            val metrics = DisplayMetrics()
-
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                                val display = requireActivity().display
-                                display?.getRealMetrics(metrics)
-                            } else {
-                                @Suppress("DEPRECATION")
-                                val display = requireActivity().windowManager.defaultDisplay
-                                @Suppress("DEPRECATION")
-                                display.getMetrics(metrics)
-                            }
-
-                            val dimensions: Pair<Int, Int> =
-                                if (wallpaper.intrinsicWidth >= wallpaper.intrinsicHeight) {
-                                    metrics.heightPixels to (wallpaper.intrinsicWidth) * metrics.heightPixels / (wallpaper.intrinsicHeight)
-                                } else {
-                                    metrics.widthPixels to (wallpaper.intrinsicHeight) * metrics.widthPixels / (wallpaper.intrinsicWidth)
-                                }
-
-                            setMargins(0, (-80).toPixel(requireContext()), 0, 0
-                            )
-
-                            width = dimensions.first
-                            height = dimensions.second
-                        }
-                }
-            } else {
-                binding.widgetBg.setImageDrawable(null)
-            }
+            updateWallpaperSurface(it)
         }
 
         viewModel.fragmentScrollY.observe(viewLifecycleOwner) {
@@ -183,6 +148,16 @@ class MainFragment : Fragment() {
 
     private var uiJob: Job? = null
 
+    private fun updateWallpaperSurface(showWallpaper: Boolean) {
+        val previewColor = if (showWallpaper) {
+            Color.TRANSPARENT
+        } else {
+            ContextCompat.getColor(requireContext(), R.color.colorPrimary)
+        }
+        binding.toolbar.setCardBackgroundColor(previewColor)
+        binding.preview.setCardBackgroundColor(previewColor)
+    }
+
     private fun updateUI() {
         if (Preferences.showPreview) {
             lifecycleScope.launch(Dispatchers.IO) {
@@ -200,7 +175,9 @@ class MainFragment : Fragment() {
                 )
 
                 withContext(Dispatchers.Main) {
-                    binding.preview.setCardBackgroundColor(bgColor)
+                    binding.preview.setCardBackgroundColor(
+                        if (Preferences.showWallpaper) Color.TRANSPARENT else bgColor
+                    )
                     binding.widgetDetail.widgetShapeBackground.setImageDrawable(wallpaperDrawable)
                 }
             }

@@ -1,6 +1,5 @@
 package com.tommasoberlose.anotherwidget.ui.fragments
 
-import android.Manifest
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -16,11 +15,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.Navigation
 import androidx.transition.TransitionInflater
 import com.google.android.material.transition.MaterialSharedAxis
-import com.karumi.dexter.Dexter
-import com.karumi.dexter.MultiplePermissionsReport
-import com.karumi.dexter.PermissionToken
-import com.karumi.dexter.listener.PermissionRequest
-import com.karumi.dexter.listener.multi.MultiplePermissionsListener
 import com.tommasoberlose.anotherwidget.BuildConfig
 import com.tommasoberlose.anotherwidget.R
 import com.tommasoberlose.anotherwidget.components.BottomSheetMenu
@@ -34,7 +28,6 @@ import com.tommasoberlose.anotherwidget.ui.activities.settings.IntegrationsActiv
 import com.tommasoberlose.anotherwidget.ui.activities.MainActivity
 import com.tommasoberlose.anotherwidget.ui.activities.settings.SupportDevActivity
 import com.tommasoberlose.anotherwidget.ui.viewmodels.MainViewModel
-import com.tommasoberlose.anotherwidget.utils.checkGrantedPermission
 import com.tommasoberlose.anotherwidget.utils.ignoreExceptions
 import com.tommasoberlose.anotherwidget.utils.openURI
 import com.tommasoberlose.anotherwidget.utils.setOnSingleClickListener
@@ -126,9 +119,7 @@ class SettingsFragment : Fragment() {
         viewModel.showWallpaper.observe(viewLifecycleOwner) {
             maintainScrollPosition {
                 binding.showWallpaperLabel.text =
-                    if (it && requireActivity().checkGrantedPermission(Manifest.permission.READ_EXTERNAL_STORAGE)) getString(
-                        R.string.settings_visible
-                    ) else getString(R.string.settings_not_visible)
+                    if (it) getString(R.string.settings_visible) else getString(R.string.settings_not_visible)
             }
         }
     }
@@ -147,11 +138,7 @@ class SettingsFragment : Fragment() {
         }
 
         binding.showWallpaperToggle.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                requirePermission()
-            } else {
-                Preferences.showWallpaper = isChecked
-            }
+            Preferences.showWallpaper = isChecked
         }
 
         binding.actionIntegrations.setOnClickListener {
@@ -232,33 +219,7 @@ class SettingsFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        binding.showWallpaperToggle.setCheckedNoEvent(Preferences.showWallpaper && requireActivity().checkGrantedPermission(Manifest.permission.READ_EXTERNAL_STORAGE))
+        binding.showWallpaperToggle.setCheckedNoEvent(Preferences.showWallpaper)
     }
 
-    private fun requirePermission() {
-        Dexter.withContext(requireContext())
-            .withPermissions(
-                Manifest.permission.READ_EXTERNAL_STORAGE
-            ).withListener(object : MultiplePermissionsListener {
-                override fun onPermissionsChecked(report: MultiplePermissionsReport?) {
-                    report?.let {
-                        if (report.areAllPermissionsGranted()) {
-                            Preferences.showWallpaper = true
-                        } else {
-                            binding.showWallpaperToggle.setCheckedNoEvent(false)
-                        }
-                    }
-                }
-
-                override fun onPermissionRationaleShouldBeShown(
-                    permissions: MutableList<PermissionRequest>?,
-                    token: PermissionToken?,
-                ) {
-                    // Remember to invoke this method when the custom rationale is closed
-                    // or just by default if you don't want to use any custom rationale.
-                    token?.continuePermissionRequest()
-                }
-            })
-            .check()
-    }
 }

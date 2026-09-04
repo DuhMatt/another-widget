@@ -51,6 +51,7 @@ class CustomLocationActivity : AppCompatActivity() {
 
         viewModel = ViewModelProvider(this).get(CustomLocationViewModel::class.java)
         binding = ActivityCustomLocationBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
 
         binding.listView.setHasFixedSize(true)
@@ -59,22 +60,27 @@ class CustomLocationActivity : AppCompatActivity() {
 
         adapter = SlimAdapter.create()
         adapter
-            .register<String>(R.layout.custom_location_item) { _, injector ->
-                injector
-                    .text(R.id.text, getString(R.string.custom_location_gps))
-                    .clicked(R.id.text) {
-                        requirePermission()
+            .registerDefault(R.layout.custom_location_item) { item, injector ->
+                when (item) {
+                    is String -> {
+                        injector
+                            .text(R.id.text, getString(R.string.custom_location_gps))
+                            .clicked(R.id.text) {
+                                requirePermission()
+                            }
                     }
-            }
-            .register<Address>(R.layout.custom_location_item) { item, injector ->
-                injector.text(R.id.text, item.getAddressLine(0) ?: "")
-                injector.clicked(R.id.item) {
-                    Preferences.bulk {
-                        customLocationLat = item.latitude.toString()
-                        customLocationLon = item.longitude.toString()
-                        customLocationAdd = item.getAddressLine(0) ?: ""
-                        setResult(Activity.RESULT_OK)
-                        finish()
+                    is Address -> {
+                        injector
+                            .text(R.id.text, item.getAddressLine(0) ?: "")
+                            .clicked(R.id.item) {
+                                Preferences.bulk {
+                                    customLocationLat = item.latitude.toString()
+                                    customLocationLon = item.longitude.toString()
+                                    customLocationAdd = item.getAddressLine(0) ?: ""
+                                    setResult(Activity.RESULT_OK)
+                                    finish()
+                                }
+                            }
                     }
                 }
             }
@@ -90,7 +96,6 @@ class CustomLocationActivity : AppCompatActivity() {
 
         binding.location.requestFocus()
 
-        setContentView(binding.root)
     }
 
     private var searchJob: Job? = null

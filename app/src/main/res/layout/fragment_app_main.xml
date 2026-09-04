@@ -14,7 +14,7 @@
         app:cardCornerRadius="0dp"
         android:id="@+id/toolbar"
         android:transitionName="toolbar"
-        app:cardBackgroundColor="@color/colorPrimary">
+        app:cardBackgroundColor="@android:color/transparent">
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -22,6 +22,7 @@
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
+                android:background="@color/colorPrimary"
                 android:gravity="center_vertical">
                 <ImageView
                     android:layout_width="48dp"
@@ -75,15 +76,9 @@
                 android:layout_height="140dp"
                 android:id="@+id/preview"
                 android:animateLayoutChanges="true"
-                app:cardBackgroundColor="@color/colorPrimary"
+                app:cardBackgroundColor="@android:color/transparent"
                 app:cardCornerRadius="0dp"
                 app:cardElevation="0dp">
-                <androidx.appcompat.widget.AppCompatImageView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:scaleType="fitStart"
-                    android:adjustViewBounds="true"
-                    android:id="@+id/widget_bg" />
                 <RelativeLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"

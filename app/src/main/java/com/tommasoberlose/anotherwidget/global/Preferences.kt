@@ -120,6 +120,7 @@ object Preferences : KotprefModel() {
     var showWallpaper by booleanPref(default = true)
     var showPreview by booleanPref(default = true)
     var showXiaomiWarning by booleanPref(default = true)
+    var wallpaperPreviewMigrationVersion by intPref(default = 0)
 
     // Glance
     var enabledGlanceProviderOrder by stringPref(default = "")

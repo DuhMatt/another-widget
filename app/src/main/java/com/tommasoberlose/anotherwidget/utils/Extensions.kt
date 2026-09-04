@@ -6,7 +6,6 @@ import android.view.View
 import android.view.ViewAnimationUtils
 import android.widget.Toast
 import android.app.Activity
-import android.app.WallpaperManager
 import android.content.*
 import android.net.Uri
 import android.os.Build
@@ -19,7 +18,6 @@ import java.security.NoSuchAlgorithmException
 import kotlin.math.max
 import android.content.Intent
 import android.content.res.Resources
-import android.graphics.drawable.Drawable
 import android.util.DisplayMetrics
 import android.util.TypedValue
 import android.view.animation.AlphaAnimation
@@ -223,12 +221,6 @@ fun android.app.AlarmManager.setExactIfAllowed(
     } else {
         setAndAllowWhileIdle(type, triggerAtMillis, operation)
     }
-}
-
-fun Context.getCurrentWallpaper(): Drawable? = try {
-    WallpaperManager.getInstance(this).drawable
-} catch (e: Exception) {
-    null
 }
 
 fun String.getCapWordString(): String {

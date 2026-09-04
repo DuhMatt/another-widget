@@ -36,6 +36,7 @@ class WeatherProviderActivity : AppCompatActivity() {
 
         viewModel = ViewModelProvider(this).get(WeatherProviderViewModel::class.java)
         binding = ActivityWeatherProviderBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         binding.listView.setHasFixedSize(true)
         val mLayoutManager = LinearLayoutManager(this)
@@ -43,7 +44,8 @@ class WeatherProviderActivity : AppCompatActivity() {
 
         adapter = SlimAdapter.create()
         adapter
-            .register<Constants.WeatherProvider>(R.layout.weather_provider_list_item) { provider, injector ->
+            .registerDefault(R.layout.weather_provider_list_item) { item, injector ->
+                val provider = item as Constants.WeatherProvider
                 injector
                     .text(R.id.text, WeatherHelper.getProviderName(this, provider))
                     .clicked(R.id.item) {
@@ -122,7 +124,6 @@ class WeatherProviderActivity : AppCompatActivity() {
         setupListener()
         subscribeUi(viewModel)
 
-        setContentView(binding.root)
     }
 
     private fun subscribeUi(viewModel: WeatherProviderViewModel) {
