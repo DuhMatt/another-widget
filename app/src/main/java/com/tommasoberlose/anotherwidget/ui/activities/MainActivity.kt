@@ -10,6 +10,7 @@ import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.View
 import android.view.WindowManager
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavController
@@ -51,23 +52,29 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         setContentView(binding.root)
         window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
         window.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                handleBackNavigation()
+            }
+        })
         controlExtras(intent)
     }
 
-    override fun onBackPressed() {
+    private fun handleBackNavigation() {
         if (mainNavController?.currentDestination?.id == R.id.appMainFragment) {
-            if (settingsNavController?.navigateUp() == false) {
-                if (mAppWidgetId > 0) {
-                    addNewWidget()
-                } else {
-                    setResult(Activity.RESULT_OK)
-                    finish()
-                }
-            } else {
+            if (settingsNavController?.navigateUp() == true) {
                 viewModel.fragmentScrollY.value = 0
+                return
             }
+        } else if (mainNavController?.navigateUp() == true) {
+            return
+        }
+
+        if (mAppWidgetId > 0) {
+            addNewWidget()
         } else {
-            super.onBackPressed()
+            setResult(Activity.RESULT_OK)
+            finish()
         }
     }
 
