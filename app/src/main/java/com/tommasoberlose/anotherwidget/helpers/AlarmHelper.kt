@@ -17,7 +17,7 @@ object AlarmHelper {
     fun getNextAlarm(context: Context): String {
         val alarm = getValidNextAlarm(context)
         val remaining = alarm?.triggerTime?.minus(System.currentTimeMillis()) ?: 0L
-        return if (alarm != null && remaining > MIN_DISPLAY_LEAD_TIME_MS) {
+        return if (alarm != null && remaining > 0L) {
             setTimeout(context, alarm.triggerTime)
             "%s %s".format(
                 SimpleDateFormat("EEE", Locale.getDefault()).format(alarm.triggerTime),
@@ -30,9 +30,9 @@ object AlarmHelper {
     }
 
     fun isAlarmProbablyWrong(context: Context): Boolean {
-        val alarm = getValidNextAlarm(context)
-        val remaining = alarm?.triggerTime?.minus(System.currentTimeMillis()) ?: Long.MAX_VALUE
-        return alarm != null && remaining in 0 until MIN_DISPLAY_LEAD_TIME_MS
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        if (alarmManager.nextAlarmClock == null) return false
+        return getValidNextAlarm(context) == null
     }
 
     private fun getValidNextAlarm(context: Context): AlarmManager.AlarmClockInfo? {
@@ -88,5 +88,4 @@ object AlarmHelper {
     }
 
     private const val ALARM_UPDATE_ID = 24953
-    private const val MIN_DISPLAY_LEAD_TIME_MS = 5 * 60 * 1000L
 }
