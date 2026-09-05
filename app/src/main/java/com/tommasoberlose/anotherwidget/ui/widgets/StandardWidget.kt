@@ -487,6 +487,7 @@ class StandardWidget(val context: Context) {
             bindingView.date.text = DateHelper.getDateText(context, now)
 
             val nextAlarm = AlarmHelper.getNextAlarm(context)
+            var showingNotificationIcon = false
 
             if (Preferences.showEvents && context.checkGrantedPermission(Manifest.permission.READ_CALENDAR) && nextEvent != null && !Preferences.showEventsAsGlanceProvider) {
                 // Multiple counter
@@ -697,6 +698,7 @@ class StandardWidget(val context: Context) {
                                 try {
                                     val icon = ActiveNotificationsHelper.getLastNotificationIcon(context)
                                     if (icon != null) {
+                                        showingNotificationIcon = true
                                         bindingView.subLineIcon.isVisible = true
                                         bindingView.subLineIcon.setImageDrawable(icon)
                                     } else {
@@ -811,6 +813,12 @@ class StandardWidget(val context: Context) {
                     (if (context.isDarkTheme()) Preferences.textSecondaryAlphaDark.toIntValue()
                         .toFloat() else Preferences.textSecondaryAlpha.toIntValue()
                         .toFloat()) / 100
+            }
+
+            if (showingNotificationIcon) {
+                bindingView.subLineIcon.clearColorFilter()
+                bindingView.subLineIcon.alpha = 1f
+                bindingView.subLineIconShadow.isVisible = false
             }
 
             // Text Size
