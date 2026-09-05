@@ -126,6 +126,7 @@ object Preferences : KotprefModel() {
     var enabledGlanceProviderOrder by stringPref(default = "")
     var customNotes by stringPref(default = "")
     var showNextAlarm by booleanPref(default = false)
+    var nextAlarmWindow by intPref(default = Constants.NextAlarmWindow.SIX_HOURS.rawValue)
     var showBatteryCharging by booleanPref(default = false)
     var isBatteryLevelLow by booleanPref(default = false)
     var isCharging by booleanPref(default = false)

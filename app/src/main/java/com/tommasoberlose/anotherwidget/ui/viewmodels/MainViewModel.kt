@@ -162,6 +162,7 @@ class MainViewModel(context: Application) : AndroidViewModel(context) {
         addSource(Preferences.asLiveData(Preferences::enabledGlanceProviderOrder)) { value = true }
         addSource(Preferences.asLiveData(Preferences::customNotes)) { value = true }
         addSource(Preferences.asLiveData(Preferences::showNextAlarm)) { value = true }
+        addSource(Preferences.asLiveData(Preferences::nextAlarmWindow)) { value = true }
         addSource(Preferences.asLiveData(Preferences::showBatteryCharging)) { value = true }
         addSource(Preferences.asLiveData(Preferences::showDailySteps)) { value = true }
         addSource(Preferences.asLiveData(Preferences::showGreetings)) { value = true }

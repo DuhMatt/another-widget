@@ -152,32 +152,26 @@ class GlanceTabFragment : Fragment() {
                         }
                     }
                     Constants.GlanceProviderId.NEXT_CLOCK_ALARM -> {
+                        val alarmIsWrong = Preferences.showNextAlarm && AlarmHelper.isAlarmProbablyWrong(
+                            requireContext()
+                        )
+                        val alarmIsVisible = Preferences.showNextAlarm &&
+                            AlarmHelper.hasDisplayableNextAlarm(requireContext())
                         injector.text(
                             R.id.label,
-                            if (Preferences.showNextAlarm && !AlarmHelper.isAlarmProbablyWrong(
-                                    requireContext()
-                                )
-                            ) getString(R.string.settings_visible) else getString(
+                            if (alarmIsVisible) getString(R.string.settings_visible) else getString(
                                 R.string.settings_not_visible
                             )
                         )
                         injector.visibility(
                             R.id.error_icon,
-                            if (Preferences.showNextAlarm && AlarmHelper.isAlarmProbablyWrong(
-                                    requireContext()
-                                )
-                            ) View.VISIBLE else View.GONE
+                            if (alarmIsWrong) View.VISIBLE else View.GONE
                         )
                         injector.visibility(
                             R.id.info_icon,
-                            if (!(Preferences.showNextAlarm && AlarmHelper.isAlarmProbablyWrong(
-                                    requireContext()
-                                ))
-                            ) View.VISIBLE else View.GONE
+                            if (!alarmIsWrong) View.VISIBLE else View.GONE
                         )
-                        isVisible = (Preferences.showNextAlarm && !AlarmHelper.isAlarmProbablyWrong(
-                            requireContext()
-                        ))
+                        isVisible = alarmIsVisible
                     }
                     Constants.GlanceProviderId.BATTERY_LEVEL_LOW -> {
                         injector.text(

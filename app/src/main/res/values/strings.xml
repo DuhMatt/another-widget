@@ -242,6 +242,16 @@
     <string name="settings_show_next_alarm_app_title">Alarm set by %s</string>
     <string name="settings_show_next_alarm_app_subtitle_wrong">The next alarm clock seems to be wrong</string>
     <string name="settings_show_next_alarm_app_subtitle_correct">The next alarm clock seems to be correct</string>
+    <string name="settings_show_next_alarm_window_title">Show alarm within</string>
+    <string name="settings_show_next_alarm_window_subtitle">Only show alarms that ring within the selected time</string>
+    <string-array name="glance_next_alarm_windows">
+        <item>5 minutes</item>
+        <item>10 minutes</item>
+        <item>30 minutes</item>
+        <item>1 hour</item>
+        <item>3 hours</item>
+        <item>6 hours</item>
+    </string-array>
     <string name="settings_show_notifications_title">Latest notifications</string>
     <string name="settings_show_notifications_subtitle">Check out the latest notifications that showed up on your device.</string>
     <string name="settings_show_greetings_title">Greetings</string>

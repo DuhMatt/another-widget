@@ -232,6 +232,16 @@
     <string name="settings_show_next_alarm_app_title">%s 设定的闹钟</string>
     <string name="settings_show_next_alarm_app_subtitle_wrong">下一个闹钟似乎有点问题</string>
     <string name="settings_show_next_alarm_app_subtitle_correct">下一个闹钟似乎没有问题</string>
+    <string name="settings_show_next_alarm_window_title">显示时间范围</string>
+    <string name="settings_show_next_alarm_window_subtitle">只显示所选时间内会响铃的闹钟</string>
+    <string-array name="glance_next_alarm_windows">
+        <item>5 分钟</item>
+        <item>10 分钟</item>
+        <item>30 分钟</item>
+        <item>1 小时</item>
+        <item>3 小时</item>
+        <item>6 小时</item>
+    </string-array>
     <string name="settings_show_notifications_title">最近通知</string>
     <string name="settings_show_notifications_subtitle">查看设备上显示的最新通知。</string>
     <string name="settings_show_greetings_title">问候语</string>

@@ -33,6 +33,7 @@ import com.tommasoberlose.anotherwidget.ui.activities.tabs.AppNotificationsFilte
 import com.tommasoberlose.anotherwidget.ui.activities.tabs.MediaInfoFormatActivity
 import com.tommasoberlose.anotherwidget.ui.activities.tabs.MusicPlayersFilterActivity
 import com.tommasoberlose.anotherwidget.ui.fragments.MainFragment
+import com.tommasoberlose.anotherwidget.ui.widgets.MainWidget
 import com.tommasoberlose.anotherwidget.utils.checkGrantedPermission
 import kotlinx.coroutines.*
 import org.greenrobot.eventbus.EventBus
@@ -85,9 +86,37 @@ class GlanceSettingsDialog(val context: Activity, val provider: Constants.Glance
 
         /* ALARM */
         binding.alarmSetByContainer.isVisible = provider == Constants.GlanceProviderId.NEXT_CLOCK_ALARM
+        binding.actionChangeAlarmWindow.isVisible = provider == Constants.GlanceProviderId.NEXT_CLOCK_ALARM
         if (provider == Constants.GlanceProviderId.NEXT_CLOCK_ALARM) {
             binding.header.text = context.getString(R.string.information_header)
             binding.warningContainer.isVisible = false
+
+            val windowLabels = context.resources.getStringArray(R.array.glance_next_alarm_windows)
+            val windows = Constants.NextAlarmWindow.values()
+            val selectedWindow = Constants.NextAlarmWindow.fromInt(Preferences.nextAlarmWindow)
+                ?: Constants.NextAlarmWindow.SIX_HOURS.also {
+                    Preferences.nextAlarmWindow = it.rawValue
+                }
+            binding.alarmWindowLabel.text = windowLabels[windows.indexOf(selectedWindow)]
+            binding.actionChangeAlarmWindow.setOnClickListener {
+                val currentWindow = Constants.NextAlarmWindow.fromInt(Preferences.nextAlarmWindow)
+                    ?: Constants.NextAlarmWindow.SIX_HOURS
+                val dialog = BottomSheetMenu<Int>(
+                    context,
+                    header = context.getString(R.string.settings_show_next_alarm_window_title)
+                ).setSelectedValue(currentWindow.rawValue)
+                windows.forEachIndexed { index, window ->
+                    dialog.addItem(windowLabels[index], window.rawValue)
+                }
+                dialog.addOnSelectItemListener { value ->
+                    val newWindow = Constants.NextAlarmWindow.fromInt(value)
+                        ?: Constants.NextAlarmWindow.SIX_HOURS
+                    Preferences.nextAlarmWindow = newWindow.rawValue
+                    binding.alarmWindowLabel.text = windowLabels[windows.indexOf(newWindow)]
+                    MainWidget.updateWidget(context)
+                    statusCallback?.invoke()
+                }.show()
+            }
             checkNextAlarm()
         }
 

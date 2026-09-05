@@ -155,6 +155,40 @@
                 android:focusable="true"
                 android:background="?android:attr/selectableItemBackground"
                 android:gravity="center_vertical"
+                android:id="@+id/action_change_alarm_window"
+                android:orientation="horizontal">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingLeft="8dp"
+                    android:paddingRight="8dp"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="16sp"
+                        style="@style/AnotherWidget.Settings.Title"
+                        android:text="@string/settings_show_next_alarm_window_title"/>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="14sp"
+                        android:id="@+id/alarm_window_label"
+                        android:text="@string/settings_show_next_alarm_window_subtitle"
+                        style="@style/AnotherWidget.Settings.Subtitle"/>
+                </LinearLayout>
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="16dp"
+                android:paddingBottom="16dp"
+                android:paddingLeft="24dp"
+                android:paddingRight="24dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?android:attr/selectableItemBackground"
+                android:gravity="center_vertical"
                 android:id="@+id/action_filter_music_players"
                 android:orientation="horizontal">
                 <LinearLayout

@@ -74,6 +74,20 @@ object Constants {
         }
     }
 
+    enum class NextAlarmWindow(val rawValue: Int) {
+        FIVE_MINUTES(5),
+        TEN_MINUTES(10),
+        THIRTY_MINUTES(30),
+        ONE_HOUR(60),
+        THREE_HOURS(180),
+        SIX_HOURS(360);
+
+        companion object {
+            private val map = values().associateBy(NextAlarmWindow::rawValue)
+            fun fromInt(value: Int) = map[value]
+        }
+    }
+
     enum class WeatherIconPack(val rawValue: Int) {
         DEFAULT(0),
         MINIMAL(1),
