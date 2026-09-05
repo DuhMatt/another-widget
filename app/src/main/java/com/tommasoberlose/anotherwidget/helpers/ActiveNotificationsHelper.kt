@@ -2,6 +2,7 @@ package com.tommasoberlose.anotherwidget.helpers
 
 import android.content.ContentResolver
 import android.content.Context
+import android.graphics.drawable.Drawable
 import android.provider.Settings
 import android.util.Log
 import androidx.core.app.NotificationManagerCompat
@@ -13,7 +14,21 @@ import com.tommasoberlose.anotherwidget.ui.widgets.MainWidget
 
 object ActiveNotificationsHelper {
     fun showLastNotification(): Boolean {
-        return Preferences.lastNotificationId != -1 && Preferences.lastNotificationIcon != 0 && Preferences.lastNotificationPackage.isNotBlank() && Preferences.lastNotificationTitle.isNotBlank()
+        return Preferences.lastNotificationId != -1 && Preferences.lastNotificationPackage.isNotBlank() && Preferences.lastNotificationTitle.isNotBlank()
+    }
+
+    fun getLastNotificationIcon(context: Context): Drawable? {
+        if (Preferences.lastNotificationPackage.isBlank()) return null
+
+        return try {
+            val packageContext = context.createPackageContext(
+                Preferences.lastNotificationPackage,
+                0
+            )
+            packageContext.applicationInfo.loadIcon(packageContext.packageManager)
+        } catch (ignored: Exception) {
+            null
+        }
     }
 
     fun clearLastNotification(context: Context) {

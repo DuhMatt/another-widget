@@ -317,13 +317,6 @@ class AlignedWidget(val context: Context, val rightAligned: Boolean = false) {
                         Constants.GlanceProviderId.NOTIFICATIONS -> {
                             if (Preferences.showNotifications && ActiveNotificationsHelper.showLastNotification()) {
                                 try {
-                                    if (Preferences.lastNotificationIcon != 0) {
-                                        val remotePackageContext = context.createPackageContext(
-                                            Preferences.lastNotificationPackage, 0)
-                                        ContextCompat.getDrawable(
-                                            remotePackageContext,
-                                            Preferences.lastNotificationIcon)
-                                    }
                                     val notificationIntent = PendingIntent.getActivity(
                                         context,
                                         widgetID,
@@ -670,11 +663,8 @@ class AlignedWidget(val context: Context, val rightAligned: Boolean = false) {
                         Constants.GlanceProviderId.NOTIFICATIONS -> {
                             if (Preferences.showNotifications && ActiveNotificationsHelper.showLastNotification()) {
                                 try {
-                                    if (Preferences.lastNotificationIcon != 0) {
-                                        val remotePackageContext = context.createPackageContext(
-                                            Preferences.lastNotificationPackage, 0)
-                                        val icon = ContextCompat.getDrawable(remotePackageContext,
-                                            Preferences.lastNotificationIcon)
+                                    val icon = ActiveNotificationsHelper.getLastNotificationIcon(context)
+                                    if (icon != null) {
                                         bindingView.subLineIcon.isVisible = true
                                         bindingView.subLineIcon.setImageDrawable(icon)
                                     } else {

@@ -4,7 +4,6 @@ import android.app.*
 import android.content.Context
 import android.content.Intent
 import android.media.session.MediaSession
-import android.os.Build
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
@@ -39,16 +38,11 @@ class NotificationListener : NotificationListenerService() {
                 if (bundle.containsKey(Notification.EXTRA_TITLE) && !isGroupHeader && !isOngoing && ActiveNotificationsHelper.isAppAccepted(sbn.packageName) && !sbn.packageName.contains("com.android.systemui")) {
                     Preferences.lastNotificationId = sbn.id
                     Preferences.lastNotificationTitle = bundle.getString(Notification.EXTRA_TITLE) ?: ""
-                    try {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                            Preferences.lastNotificationIcon = sbn.notification.smallIcon.resId
-                        } else {
-                            @Suppress("DEPRECATION")
-                            Preferences.lastNotificationIcon = sbn.notification.icon
-                        }
-                    } catch (ex: Exception) {
-                        Preferences.lastNotificationIcon = 0
-                    }
+                    // Keep a non-zero marker for the existing preference schema. The actual
+                    // icon is loaded from the notifying application's ApplicationInfo when
+                    // the widget is rendered; Notification.smallIcon is only a status-bar
+                    // glyph and is not the application's icon.
+                    Preferences.lastNotificationIcon = 1
                     Preferences.lastNotificationPackage = sbn.packageName
                     MainWidget.updateWidget(this)
                     setTimeout(this)
