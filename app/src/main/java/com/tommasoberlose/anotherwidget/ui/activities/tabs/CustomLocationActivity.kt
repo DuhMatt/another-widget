@@ -5,6 +5,7 @@ import android.app.Activity
 import android.content.pm.PackageManager
 import android.location.Address
 import android.location.Geocoder
+import android.location.Location
 import android.os.Bundle
 import android.os.Build
 import android.util.Log
@@ -73,6 +74,7 @@ class CustomLocationActivity : AppCompatActivity() {
                                     customLocationLat = item.latitude.toString()
                                     customLocationLon = item.longitude.toString()
                                     customLocationAdd = item.getAddressLine(0) ?: ""
+                                    customLocationCity = ""
                                     setResult(Activity.RESULT_OK)
                                     finish()
                                 }
@@ -155,6 +157,55 @@ class CustomLocationActivity : AppCompatActivity() {
         }
     }
 
+    private suspend fun reverseGeocode(location: Location): String {
+        if (!Geocoder.isPresent()) return ""
+
+        val geocoder = Geocoder(this@CustomLocationActivity)
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            suspendCancellableCoroutine { continuation ->
+                try {
+                    geocoder.getFromLocation(
+                        location.latitude,
+                        location.longitude,
+                        1,
+                        object : Geocoder.GeocodeListener {
+                            override fun onGeocode(addresses: List<Address>) {
+                                if (continuation.isActive) {
+                                    continuation.resume(addresses.firstCityName())
+                                }
+                            }
+
+                            override fun onError(errorMessage: String?) {
+                                if (continuation.isActive) continuation.resume("")
+                            }
+                        }
+                    )
+                } catch (exception: Exception) {
+                    if (continuation.isActive) continuation.resume("")
+                }
+            }
+        } else {
+            @Suppress("DEPRECATION")
+            try {
+                withContext(Dispatchers.IO) {
+                    geocoder.getFromLocation(location.latitude, location.longitude, 1)
+                        .orEmpty()
+                        .firstCityName()
+                }
+            } catch (ignored: Exception) {
+                ""
+            }
+        }
+    }
+
+    private fun List<Address>.firstCityName(): String {
+        return firstNotNullOfOrNull { address ->
+            sequenceOf(address.locality, address.subAdminArea, address.adminArea)
+                .map { it?.trim().orEmpty() }
+                .firstOrNull { it.isNotBlank() }
+        }.orEmpty()
+    }
+
     private fun requirePermission() {
         Dexter.withContext(this)
             .withPermissions(
@@ -198,10 +249,12 @@ class CustomLocationActivity : AppCompatActivity() {
                 if (location == null) {
                     showLocationError()
                 } else {
+                    val city = reverseGeocode(location)
                     Preferences.bulk {
                         customLocationLat = location.latitude.toString()
                         customLocationLon = location.longitude.toString()
                         customLocationAdd = ""
+                        customLocationCity = city
                     }
                     setResult(Activity.RESULT_OK)
                     finish()

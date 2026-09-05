@@ -125,6 +125,7 @@
     <string name="settings_weather_refresh_period_subtitle_5">24 小时</string>
     <string name="settings_custom_location_title">位置</string>
     <string name="custom_location_gps">地理定位</string>
+    <string name="custom_location_gps_with_city">地理定位 · %1$s</string>
     <string name="show_weather_visible">天气信息可见</string>
     <string name="show_weather_not_visible">天气信息已隐藏</string>
     <string name="settings_weather_app_title">天气</string>

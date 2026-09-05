@@ -130,6 +130,7 @@
     <string name="settings_weather_refresh_period_subtitle_5">24 hours</string>
     <string name="settings_custom_location_title">Location</string>
     <string name="custom_location_gps">Geolocation</string>
+    <string name="custom_location_gps_with_city">Geolocation · %1$s</string>
     <string name="show_weather_visible">Weather info is visible</string>
     <string name="show_weather_not_visible">Weather info is hidden</string>
     <string name="settings_weather_app_title">Weather</string>

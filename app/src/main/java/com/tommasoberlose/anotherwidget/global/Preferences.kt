@@ -32,6 +32,7 @@ object Preferences : KotprefModel() {
     var customLocationLat by stringPref(key = "PREF_CUSTOM_LOCATION_LAT", default = "")
     var customLocationLon by stringPref(key = "PREF_CUSTOM_LOCATION_LON", default = "")
     var customLocationAdd by stringPref(key = "PREF_CUSTOM_LOCATION_ADD", default = "")
+    var customLocationCity by stringPref(key = "PREF_CUSTOM_LOCATION_CITY", default = "")
     var dateFormat by stringPref(default = "")
     var isDateCapitalize by booleanPref(default = true)
     var isDateUppercase by booleanPref(default = false)

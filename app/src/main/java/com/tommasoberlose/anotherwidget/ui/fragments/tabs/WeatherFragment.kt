@@ -122,11 +122,12 @@ class WeatherFragment : Fragment() {
         }
 
         viewModel.customLocationAdd.observe(viewLifecycleOwner) {
-            maintainScrollPosition {
-                binding.labelCustomLocation.text =
-                    if (it == "") getString(R.string.custom_location_gps) else it
-            }
+            updateCustomLocationLabel()
             checkLocationPermission()
+        }
+
+        viewModel.customLocationCity.observe(viewLifecycleOwner) {
+            updateCustomLocationLabel()
         }
 
         viewModel.weatherTempUnit.observe(viewLifecycleOwner) {
@@ -149,6 +150,18 @@ class WeatherFragment : Fragment() {
                 binding.labelWeatherIconPack.text = getString(R.string.settings_weather_icon_pack_default).format((it + 1))
             }
             checkLocationPermission()
+        }
+    }
+
+    private fun updateCustomLocationLabel() {
+        maintainScrollPosition {
+            val manualLocation = Preferences.customLocationAdd.trim()
+            val city = Preferences.customLocationCity.trim()
+            binding.labelCustomLocation.text = when {
+                manualLocation.isNotBlank() -> manualLocation
+                city.isNotBlank() -> getString(R.string.custom_location_gps_with_city).format(city)
+                else -> getString(R.string.custom_location_gps)
+            }
         }
     }
 
