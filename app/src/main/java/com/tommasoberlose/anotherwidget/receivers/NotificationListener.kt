@@ -4,7 +4,6 @@ import android.app.*
 import android.content.Context
 import android.content.Intent
 import android.media.session.MediaSession
-import android.os.Build
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
@@ -45,6 +44,11 @@ class NotificationListener : NotificationListenerService() {
                     Preferences.lastNotificationPackage = sbn.packageName
                     MainWidget.updateWidget(this)
                     setTimeout(this)
+                } else if (ActiveNotificationsHelper.isIgnoredNotificationPackage(sbn.packageName) &&
+                        Preferences.lastNotificationPackage == sbn.packageName) {
+                    // Xiaomi may post a normal, auto-cancel notification for Mi Home. Do not
+                    // leave an older Mi Home record rendered after that notification changes.
+                    ActiveNotificationsHelper.clearLastNotification(this)
                 }
             }
         }
@@ -70,16 +74,12 @@ class NotificationListener : NotificationListenerService() {
 
         val notification = sbn.notification
         val flags = notification.flags
-        val isMiHomeForegroundService =
-                sbn.packageName == "com.xiaomi.smarthome" &&
-                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
-                        notification.channelId == "hide_foreground"
         return notification.extras.containsKey(Notification.EXTRA_TITLE) &&
                 flags and Notification.FLAG_GROUP_SUMMARY == 0 &&
                 flags and Notification.FLAG_ONGOING_EVENT == 0 &&
                 flags and Notification.FLAG_FOREGROUND_SERVICE == 0 &&
                 flags and Notification.FLAG_NO_CLEAR == 0 &&
-                !isMiHomeForegroundService &&
+                !ActiveNotificationsHelper.isIgnoredNotificationPackage(sbn.packageName) &&
                 ActiveNotificationsHelper.isAppAccepted(sbn.packageName) &&
                 !sbn.packageName.contains("com.android.systemui")
     }

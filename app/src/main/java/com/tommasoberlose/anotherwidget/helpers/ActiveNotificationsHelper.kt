@@ -14,7 +14,10 @@ import com.tommasoberlose.anotherwidget.ui.widgets.MainWidget
 
 object ActiveNotificationsHelper {
     fun showLastNotification(): Boolean {
-        return Preferences.lastNotificationId != -1 && Preferences.lastNotificationPackage.isNotBlank() && Preferences.lastNotificationTitle.isNotBlank()
+        return Preferences.lastNotificationId != -1 &&
+                Preferences.lastNotificationPackage.isNotBlank() &&
+                Preferences.lastNotificationTitle.isNotBlank() &&
+                !isIgnoredNotificationPackage(Preferences.lastNotificationPackage)
     }
 
     fun getLastNotificationIcon(context: Context): Drawable? {
@@ -51,6 +54,8 @@ object ActiveNotificationsHelper {
     }
 
     fun isAppAccepted(appPkg: String): Boolean = Preferences.appNotificationsFilter == "" || Preferences.appNotificationsFilter.contains(appPkg)
+
+    fun isIgnoredNotificationPackage(appPkg: String): Boolean = appPkg == "com.xiaomi.smarthome"
 
     fun toggleAppFilter(appPkg: String) {
         if (Preferences.appNotificationsFilter == "" || !Preferences.appNotificationsFilter.contains(appPkg)) {
