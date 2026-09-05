@@ -4,6 +4,7 @@ import android.app.*
 import android.content.Context
 import android.content.Intent
 import android.media.session.MediaSession
+import android.os.Build
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
@@ -44,10 +45,9 @@ class NotificationListener : NotificationListenerService() {
                     Preferences.lastNotificationPackage = sbn.packageName
                     MainWidget.updateWidget(this)
                     setTimeout(this)
-                } else if (ActiveNotificationsHelper.isIgnoredNotificationPackage(sbn.packageName) &&
+                } else if (isMiHomePlaceholder(sbn) &&
                         Preferences.lastNotificationPackage == sbn.packageName) {
-                    // Xiaomi may post a normal, auto-cancel notification for Mi Home. Do not
-                    // leave an older Mi Home record rendered after that notification changes.
+                    // Do not leave an older empty Mi Home shell rendered after it is reposted.
                     ActiveNotificationsHelper.clearLastNotification(this)
                 }
             }
@@ -74,14 +74,44 @@ class NotificationListener : NotificationListenerService() {
 
         val notification = sbn.notification
         val flags = notification.flags
+        val isMiHomeForegroundService =
+                sbn.packageName == "com.xiaomi.smarthome" &&
+                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+                        notification.channelId == "hide_foreground"
         return notification.extras.containsKey(Notification.EXTRA_TITLE) &&
                 flags and Notification.FLAG_GROUP_SUMMARY == 0 &&
                 flags and Notification.FLAG_ONGOING_EVENT == 0 &&
                 flags and Notification.FLAG_FOREGROUND_SERVICE == 0 &&
                 flags and Notification.FLAG_NO_CLEAR == 0 &&
-                !ActiveNotificationsHelper.isIgnoredNotificationPackage(sbn.packageName) &&
+                !isMiHomeForegroundService &&
+                !isMiHomePlaceholder(sbn) &&
                 ActiveNotificationsHelper.isAppAccepted(sbn.packageName) &&
                 !sbn.packageName.contains("com.android.systemui")
+    }
+
+    private fun isMiHomePlaceholder(sbn: StatusBarNotification): Boolean {
+        if (sbn.packageName != "com.xiaomi.smarthome") return false
+
+        val extras = sbn.notification.extras
+        val title = extras.getCharSequence(Notification.EXTRA_TITLE)?.toString()?.trim()
+        val appLabel = try {
+            packageManager.getApplicationLabel(
+                    packageManager.getApplicationInfo(sbn.packageName, 0)
+            ).toString().trim()
+        } catch (ignored: Exception) {
+            "米家"
+        }
+
+        val hasContent = listOf(
+                Notification.EXTRA_TEXT,
+                Notification.EXTRA_BIG_TEXT,
+                Notification.EXTRA_SUB_TEXT,
+                Notification.EXTRA_SUMMARY_TEXT
+        ).any { key ->
+            extras.getCharSequence(key)?.toString()?.trim()?.isNotEmpty() == true
+        } || extras.containsKey(Notification.EXTRA_MESSAGES)
+
+        return title != null && title == appLabel && !hasContent
     }
 
     private fun clearStaleNotificationIfNeeded() {
