@@ -131,10 +131,12 @@ object Preferences : KotprefModel() {
     var showBatteryCharging by booleanPref(default = false)
     var isBatteryLevelLow by booleanPref(default = false)
     var isCharging by booleanPref(default = false)
-    var lastBatteryLevel by intPref(default = -1)
     var googleFitSteps by longPref(default = -1)
     var showDailySteps by booleanPref(default = false)
     var showGreetings by booleanPref(default = false)
+    var greetingPeriod by intPref(default = -1)
+    var greetingText by stringPref(default = "")
+    var greetingLocale by stringPref(default = "")
     var showNotifications by booleanPref(default = false)
     var hideNotificationAfter by intPref(default = Constants.GlanceNotificationTimer.ONE_MINUTE.rawValue)
 

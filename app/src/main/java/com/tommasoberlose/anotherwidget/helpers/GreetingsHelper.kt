@@ -99,12 +99,30 @@ object GreetingsHelper {
 
     fun getRandomString(context: Context): String {
         val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
-        val array = when {
-            hour in 5..8 -> context.resources.getStringArray(R.array.morning_greetings)
-            hour in 19..21 -> context.resources.getStringArray(R.array.evening_greetings)
-            hour >= 22 && hour < 5 -> context.resources.getStringArray(R.array.night_greetings)
-            else -> emptyArray()
+        val period = when {
+            hour in 5..8 -> 1
+            hour in 19..21 -> 2
+            hour >= 22 || hour < 5 -> 3
+            else -> 0
         }
-        return if (array.isNotEmpty()) array[Random().nextInt(array.size)] else ""
+        if (period == 0) return ""
+
+        val array = when (period) {
+            1 -> context.resources.getStringArray(R.array.morning_greetings)
+            2 -> context.resources.getStringArray(R.array.evening_greetings)
+            else -> context.resources.getStringArray(R.array.night_greetings)
+        }
+        if (array.isEmpty()) return ""
+
+        val locale = context.resources.configuration.locales[0].toLanguageTag()
+        if (Preferences.greetingPeriod != period ||
+            Preferences.greetingText.isBlank() ||
+            Preferences.greetingLocale != locale
+        ) {
+            Preferences.greetingPeriod = period
+            Preferences.greetingLocale = locale
+            Preferences.greetingText = array[Random().nextInt(array.size)]
+        }
+        return Preferences.greetingText
     }
 }
