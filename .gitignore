@@ -12,4 +12,5 @@ apikey.properties
 ./.idea/*
 app/release/*
 /app/release/*
+/signing/
 /.learnings/
