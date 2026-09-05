@@ -23,6 +23,7 @@ import java.util.*
 class NotificationListener : NotificationListenerService() {
     override fun onListenerConnected() {
         MediaPlayerHelper.updatePlayingMediaInfo(this)
+        clearStaleNotificationIfNeeded()
         MainWidget.updateWidget(this)
         super.onListenerConnected()
     }
@@ -32,10 +33,7 @@ class NotificationListener : NotificationListenerService() {
             bundle.getParcelable<MediaSession.Token>(Notification.EXTRA_MEDIA_SESSION)?.let {
                 MediaPlayerHelper.updatePlayingMediaInfo(this)
             } ?: run {
-                val isGroupHeader = sbn.notification.flags and Notification.FLAG_GROUP_SUMMARY != 0
-                val isOngoing = sbn.notification.flags and Notification.FLAG_ONGOING_EVENT != 0
-
-                if (bundle.containsKey(Notification.EXTRA_TITLE) && !isGroupHeader && !isOngoing && ActiveNotificationsHelper.isAppAccepted(sbn.packageName) && !sbn.packageName.contains("com.android.systemui")) {
+                if (isAcceptedNotification(sbn)) {
                     Preferences.lastNotificationId = sbn.id
                     Preferences.lastNotificationTitle = bundle.getString(Notification.EXTRA_TITLE) ?: ""
                     // Keep a non-zero marker for the existing preference schema. The actual
@@ -64,6 +62,36 @@ class NotificationListener : NotificationListenerService() {
 
         MainWidget.updateWidget(this)
         super.onNotificationRemoved(sbn)
+    }
+
+    private fun isAcceptedNotification(sbn: StatusBarNotification?): Boolean {
+        if (sbn == null) return false
+
+        val notification = sbn.notification
+        val flags = notification.flags
+        return notification.extras.containsKey(Notification.EXTRA_TITLE) &&
+                flags and Notification.FLAG_GROUP_SUMMARY == 0 &&
+                flags and Notification.FLAG_ONGOING_EVENT == 0 &&
+                flags and Notification.FLAG_FOREGROUND_SERVICE == 0 &&
+                ActiveNotificationsHelper.isAppAccepted(sbn.packageName) &&
+                !sbn.packageName.contains("com.android.systemui")
+    }
+
+    private fun clearStaleNotificationIfNeeded() {
+        if (Preferences.lastNotificationId == -1 || Preferences.lastNotificationPackage.isBlank()) return
+
+        val activeNotification = try {
+            getActiveNotifications().firstOrNull {
+                it.id == Preferences.lastNotificationId &&
+                        it.packageName == Preferences.lastNotificationPackage
+            }
+        } catch (ignored: Exception) {
+            null
+        }
+
+        if (!isAcceptedNotification(activeNotification)) {
+            ActiveNotificationsHelper.clearLastNotification(this)
+        }
     }
 
     private fun setTimeout(context: Context) {
