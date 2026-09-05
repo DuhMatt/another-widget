@@ -15,13 +15,13 @@ import java.util.*
 
 object AlarmHelper {
     fun getNextAlarm(context: Context): String {
-        val alarm = getValidNextAlarm(context)
-        val remaining = alarm?.triggerTime?.minus(System.currentTimeMillis()) ?: 0L
-        return if (alarm != null && remaining > 0L) {
-            setTimeout(context, alarm.triggerTime)
+        val triggerTime = getNextAlarmTime(context)
+        val remaining = triggerTime?.minus(System.currentTimeMillis()) ?: 0L
+        return if (triggerTime != null && remaining > 0L) {
+            setTimeout(context, triggerTime)
             "%s %s".format(
-                SimpleDateFormat("EEE", Locale.getDefault()).format(alarm.triggerTime),
-                DateFormat.getTimeFormat(context).format(Date(alarm.triggerTime))
+                SimpleDateFormat("EEE", Locale.getDefault()).format(triggerTime),
+                DateFormat.getTimeFormat(context).format(Date(triggerTime))
             )
         } else {
             cancelTimeout(context)
@@ -32,7 +32,19 @@ object AlarmHelper {
     fun isAlarmProbablyWrong(context: Context): Boolean {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         if (alarmManager.nextAlarmClock == null) return false
-        return getValidNextAlarm(context) == null
+        return getNextAlarmTime(context) == null
+    }
+
+    private fun getNextAlarmTime(context: Context): Long? {
+        val alarm = getValidNextAlarm(context) ?: return null
+        if (alarm.showIntent.creatorPackage == XIAOMI_DESKCLOCK_PACKAGE &&
+            ShizukuAlarmHelper.isUsable(context)
+        ) {
+            // Xiaomi publishes ALARM_ARRIVING as nextAlarmClock. Shizuku lets
+            // us read the real ALARM_ALERT entry from dumpsys alarm instead.
+            return ShizukuAlarmHelper.getNextAlarmAlertTime(context)
+        }
+        return alarm.triggerTime
     }
 
     private fun getValidNextAlarm(context: Context): AlarmManager.AlarmClockInfo? {
@@ -88,4 +100,5 @@ object AlarmHelper {
     }
 
     private const val ALARM_UPDATE_ID = 24953
+    private const val XIAOMI_DESKCLOCK_PACKAGE = "com.android.deskclock"
 }

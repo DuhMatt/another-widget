@@ -27,6 +27,7 @@ import com.tommasoberlose.anotherwidget.helpers.ActiveNotificationsHelper
 import com.tommasoberlose.anotherwidget.helpers.AlarmHelper
 import com.tommasoberlose.anotherwidget.helpers.GreetingsHelper
 import com.tommasoberlose.anotherwidget.helpers.MediaPlayerHelper
+import com.tommasoberlose.anotherwidget.helpers.ShizukuAlarmHelper
 import com.tommasoberlose.anotherwidget.receivers.ActivityDetectionReceiver
 import com.tommasoberlose.anotherwidget.ui.activities.tabs.AppNotificationsFilterActivity
 import com.tommasoberlose.anotherwidget.ui.activities.tabs.MediaInfoFormatActivity
@@ -169,6 +170,9 @@ class GlanceSettingsDialog(val context: Activity, val provider: Constants.Glance
                         }
                         Constants.GlanceProviderId.NEXT_CLOCK_ALARM -> {
                             Preferences.showNextAlarm = isChecked
+                            if (isChecked) {
+                                ShizukuAlarmHelper.requestPermission(context)
+                            }
                             checkNextAlarm()
                         }
                         Constants.GlanceProviderId.BATTERY_LEVEL_LOW -> {
@@ -229,6 +233,9 @@ class GlanceSettingsDialog(val context: Activity, val provider: Constants.Glance
     }
     
     private fun checkNextAlarm() {
+        if (Preferences.showNextAlarm) {
+            ShizukuAlarmHelper.requestPermission(context)
+        }
         with(context.getSystemService(Context.ALARM_SERVICE) as AlarmManager) {
             val alarm = nextAlarmClock
             if (alarm != null && alarm.showIntent != null) {

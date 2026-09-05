@@ -40,6 +40,11 @@ class UpdatesReceiver : BroadcastReceiver() {
             AlarmManager.ACTION_NEXT_ALARM_CLOCK_CHANGED,
             Actions.ACTION_ALARM_UPDATE,
             Actions.ACTION_TIME_UPDATE -> {
+                if (intent.action == AlarmManager.ACTION_NEXT_ALARM_CLOCK_CHANGED ||
+                    intent.action == Actions.ACTION_ALARM_UPDATE
+                ) {
+                    ShizukuAlarmHelper.invalidate(context)
+                }
                 MainWidget.updateWidget(context)
                 if (intent.hasExtra(EVENT_ID)) {
                     setUpdates(context, intent.getLongExtra(EVENT_ID, -1))

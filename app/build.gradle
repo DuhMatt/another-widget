@@ -26,7 +26,10 @@ android {
 
     defaultConfig {
         applicationId "com.tommasoberlose.anotherwidget"
-        minSdkVersion 23
+        // Shizuku API 13.1.5 requires API 24. The supported target devices
+        // are Android 16+, and keeping the library's declared floor avoids
+        // unsafe manifest overrides on older Android versions.
+        minSdkVersion 24
         targetSdk 36
         versionCode 140
         versionName "2.3.4"
@@ -60,6 +63,7 @@ android {
     }
 
     buildFeatures {
+        aidl = true
         dataBinding = true
         viewBinding = true
         buildConfig = true
@@ -69,6 +73,8 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation 'dev.rikka.shizuku:api:13.1.5'
+    implementation 'dev.rikka.shizuku:provider:13.1.5'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'

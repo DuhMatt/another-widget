@@ -8,6 +8,7 @@ import com.chibatching.kotpref.Kotpref
 import com.tommasoberlose.anotherwidget.global.Preferences
 import com.tommasoberlose.anotherwidget.helpers.CrashlyticsHelper
 import com.tommasoberlose.anotherwidget.helpers.LanguageHelper
+import com.tommasoberlose.anotherwidget.helpers.ShizukuAlarmHelper
 import net.danlew.android.joda.JodaTimeAndroid
 
 class AWApplication : Application() {
@@ -23,6 +24,10 @@ class AWApplication : Application() {
 
         // Preferences
         Kotpref.init(this)
+
+        // Initialize the optional Shizuku/Sui bridge used for Xiaomi's real
+        // alarm time. The public AlarmManager path remains the fallback.
+        ShizukuAlarmHelper.initialize(this)
 
         // Dark theme
         AppCompatDelegate.setDefaultNightMode(Preferences.darkThemePreference)
