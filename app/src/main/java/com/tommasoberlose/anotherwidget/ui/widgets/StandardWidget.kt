@@ -658,7 +658,8 @@ class StandardWidget(val context: Context) {
                                     bindingView.subLineIcon.isVisible = false
                                     val batteryLevel = BatteryHelper.getBatteryLevel(context)
                                     if (batteryLevel != 100) {
-                                        bindingView.subLineText.text = context.getString(R.string.charging)
+                                        bindingView.subLineText.text =
+                                            "${context.getString(R.string.charging)} - ${batteryLevel}%"
                                     } else {
                                         bindingView.subLineText.text =
                                             context.getString(R.string.charged)
@@ -668,7 +669,7 @@ class StandardWidget(val context: Context) {
                                 } else if (Preferences.isBatteryLevelLow) {
                                     bindingView.subLineIcon.isVisible = false
                                     bindingView.subLineText.text =
-                                        context.getString(R.string.battery_low_warning)
+                                        "${context.getString(R.string.battery_low_warning)} - ${BatteryHelper.getBatteryLevel(context)}%"
                                     showSomething = true
                                     break@loop
                                 }

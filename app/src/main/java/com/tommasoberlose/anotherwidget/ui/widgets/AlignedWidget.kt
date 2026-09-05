@@ -626,7 +626,8 @@ class AlignedWidget(val context: Context, val rightAligned: Boolean = false) {
                                     bindingView.subLineIcon.isVisible = false
                                     val batteryLevel = BatteryHelper.getBatteryLevel(context)
                                     if (batteryLevel != 100) {
-                                        bindingView.subLineText.text = context.getString(R.string.charging)
+                                        bindingView.subLineText.text =
+                                            "${context.getString(R.string.charging)} - ${batteryLevel}%"
                                     } else {
                                         bindingView.subLineText.text =
                                             context.getString(R.string.charged)
@@ -636,7 +637,7 @@ class AlignedWidget(val context: Context, val rightAligned: Boolean = false) {
                                 } else if (Preferences.isBatteryLevelLow) {
                                     bindingView.subLineIcon.isVisible = false
                                     bindingView.subLineText.text =
-                                        context.getString(R.string.battery_low_warning)
+                                        "${context.getString(R.string.battery_low_warning)} - ${BatteryHelper.getBatteryLevel(context)}%"
                                     showSomething = true
                                     break@loop
                                 }
