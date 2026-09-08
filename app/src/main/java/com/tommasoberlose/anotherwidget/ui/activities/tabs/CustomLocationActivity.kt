@@ -171,7 +171,7 @@ class CustomLocationActivity : AppCompatActivity() {
                         object : Geocoder.GeocodeListener {
                             override fun onGeocode(addresses: List<Address>) {
                                 if (continuation.isActive) {
-                                    continuation.resume(addresses.firstCityName())
+                                    continuation.resume(addresses.firstAdministrativeName())
                                 }
                             }
 
@@ -190,7 +190,7 @@ class CustomLocationActivity : AppCompatActivity() {
                 withContext(Dispatchers.IO) {
                     geocoder.getFromLocation(location.latitude, location.longitude, 1)
                         .orEmpty()
-                        .firstCityName()
+                        .firstAdministrativeName()
                 }
             } catch (ignored: Exception) {
                 ""
@@ -198,9 +198,11 @@ class CustomLocationActivity : AppCompatActivity() {
         }
     }
 
-    private fun List<Address>.firstCityName(): String {
+    private fun List<Address>.firstAdministrativeName(): String {
         return firstNotNullOfOrNull { address ->
-            sequenceOf(address.locality, address.subAdminArea, address.adminArea)
+            // Android's subLocality/subAdminArea normally contain the district or
+            // county-level city. Fall back to city and province when unavailable.
+            sequenceOf(address.subLocality, address.subAdminArea, address.locality, address.adminArea)
                 .map { it?.trim().orEmpty() }
                 .firstOrNull { it.isNotBlank() }
         }.orEmpty()
