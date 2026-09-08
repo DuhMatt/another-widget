@@ -8,6 +8,7 @@ import android.content.SharedPreferences
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
+import android.os.Build
 import android.view.View
 import android.view.WindowManager
 import androidx.activity.OnBackPressedCallback
@@ -28,6 +29,8 @@ import com.tommasoberlose.anotherwidget.ui.activities.tabs.WeatherProviderActivi
 import com.tommasoberlose.anotherwidget.ui.viewmodels.MainViewModel
 import com.tommasoberlose.anotherwidget.ui.widgets.MainWidget
 import com.tommasoberlose.anotherwidget.utils.checkGrantedPermission
+import com.tommasoberlose.anotherwidget.utils.isDarkTheme
+import com.tommasoberlose.anotherwidget.utils.toPixel
 
 class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceChangeListener {
 
@@ -57,11 +60,28 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         setContentView(binding.root)
         window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
         window.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        window.statusBarColor = ContextCompat.getColor(this, R.color.colorPrimary)
+        // The wallpaper preview requires a transparent window, so draw both system
+        // bar backgrounds in the content layer for an exact color match on Android 15+.
+        window.statusBarColor = Color.TRANSPARENT
+        window.navigationBarColor = Color.TRANSPARENT
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            window.navigationBarDividerColor = Color.TRANSPARENT
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            window.isNavigationBarContrastEnforced = false
+        }
+        WindowCompat.getInsetsController(window, binding.root).apply {
+            isAppearanceLightStatusBars = !isDarkTheme()
+            isAppearanceLightNavigationBars = !isDarkTheme()
+        }
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
-            val statusBarHeight = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top
+            val systemBarInsets = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            val gestureInsets = insets.getInsets(WindowInsetsCompat.Type.systemGestures())
             binding.statusBarScrim.layoutParams = binding.statusBarScrim.layoutParams.apply {
-                height = statusBarHeight
+                height = systemBarInsets.top
+            }
+            binding.navigationBarScrim.layoutParams = binding.navigationBarScrim.layoutParams.apply {
+                height = maxOf(systemBarInsets.bottom, gestureInsets.bottom, 24.toPixel(this@MainActivity))
             }
             insets
         }

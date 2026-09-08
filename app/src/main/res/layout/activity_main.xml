@@ -40,4 +40,14 @@
         android:background="@color/colorPrimary"
         android:clickable="false"
         android:focusable="false" />
+
+    <View
+        android:id="@+id/navigation_bar_scrim"
+        android:layout_width="match_parent"
+        android:layout_height="24dp"
+        android:layout_alignParentBottom="true"
+        android:elevation="100dp"
+        android:background="@color/colorPrimary"
+        android:clickable="false"
+        android:focusable="false" />
 </RelativeLayout>
