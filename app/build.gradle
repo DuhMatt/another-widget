@@ -36,8 +36,8 @@ android {
         // unsafe manifest overrides on older Android versions.
         minSdkVersion 24
         targetSdk 36
-        versionCode 140
-        versionName "2.3.4"
+        versionCode 141
+        versionName "2.3.5"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "GOOGLE_API_KEY", googleApiKey)
