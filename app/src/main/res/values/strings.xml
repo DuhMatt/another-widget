@@ -353,6 +353,7 @@
 
     <!-- Activities -->
     <string name="action_choose_application">Choose application</string>
+    <string name="action_show_system_apps">Show system apps</string>
     <string name="support_main_title">Support the developer</string>
     <string name="thanks">Thanks for supporting me!</string>
     <string name="donation_coffee">An italian coffee</string>
