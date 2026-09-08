@@ -8,6 +8,7 @@ import android.content.pm.ResolveInfo
 import android.view.View
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.Observer
@@ -178,9 +179,29 @@ class ChooseApplicationActivity : AppCompatActivity() {
             onBackPressed()
         }
 
+        binding.actionFilter.setOnClickListener {
+            showApplicationOptions()
+        }
+
         binding.clearSearch.setOnClickListener {
             viewModel.searchInput.value = ""
         }
+    }
+
+    private fun showApplicationOptions() {
+        val popup = PopupMenu(this, binding.actionFilter)
+        popup.menuInflater.inflate(R.menu.choose_application_menu, popup.menu)
+        popup.menu.findItem(R.id.action_show_system_apps).isChecked = viewModel.showSystemApps.value == true
+        popup.setOnMenuItemClickListener { item ->
+            if (item.itemId == R.id.action_show_system_apps) {
+                item.isChecked = !item.isChecked
+                viewModel.setShowSystemApps(item.isChecked)
+                true
+            } else {
+                false
+            }
+        }
+        popup.show()
     }
 
     private fun saveApp(app: ResolveInfo) {
