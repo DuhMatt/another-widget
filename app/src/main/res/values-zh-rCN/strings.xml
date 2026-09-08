@@ -343,6 +343,7 @@
 
     <!-- Activities -->
     <string name="action_choose_application">选择应用</string>
+    <string name="action_show_system_apps">显示系统应用</string>
     <string name="support_main_title">支持开发者</string>
     <string name="thanks">感谢支持！</string>
     <string name="donation_coffee">一杯意式咖啡</string>
