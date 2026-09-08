@@ -14,6 +14,9 @@ class ChooseApplicationViewModel(application: Application) : AndroidViewModel(ap
     val pm: PackageManager by lazy { application.packageManager }
     val appList: MutableLiveData<List<ResolveInfo>> = MutableLiveData()
     val searchInput: MutableLiveData<String> = MutableLiveData("")
+    val showSystemApps: MutableLiveData<Boolean> = MutableLiveData(false)
+
+    private var allAppList: List<ResolveInfo> = emptyList()
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
@@ -21,13 +24,37 @@ class ChooseApplicationViewModel(application: Application) : AndroidViewModel(ap
                 addCategory(Intent.CATEGORY_LAUNCHER)
             }
 
-            val app = application.packageManager.queryIntentActivities(mainIntent, 0)
-            val sortedApp = app.sortedWith(Comparator { app1: ResolveInfo, app2: ResolveInfo ->
+            // Query system launchers explicitly as Android versions and OEM package
+            // managers may omit them from the default query result.
+            val app = (application.packageManager.queryIntentActivities(mainIntent, 0) +
+                application.packageManager.queryIntentActivities(mainIntent, PackageManager.MATCH_SYSTEM_ONLY))
+                .distinctBy { "${it.activityInfo.packageName}/${it.activityInfo.name}" }
+            allAppList = app.sortedWith(Comparator { app1: ResolveInfo, app2: ResolveInfo ->
                 app1.loadLabel(pm).toString().compareTo(app2.loadLabel(pm).toString())
             })
             withContext(Dispatchers.Main) {
-                appList.postValue(sortedApp)
+                publishVisibleApps()
             }
         }
+    }
+
+    fun setShowSystemApps(show: Boolean) {
+        showSystemApps.value = show
+        publishVisibleApps()
+    }
+
+    private fun publishVisibleApps() {
+        val visibleApps = if (showSystemApps.value == true) {
+            allAppList
+        } else {
+            allAppList.filterNot(::isSystemApp)
+        }
+        appList.value = visibleApps
+    }
+
+    private fun isSystemApp(app: ResolveInfo): Boolean {
+        val flags = app.activityInfo.applicationInfo.flags
+        return flags and (android.content.pm.ApplicationInfo.FLAG_SYSTEM or
+            android.content.pm.ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) != 0
     }
 }
